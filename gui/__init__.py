@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import PIL.Image
 from PIL import ImageTk
 import tkinter
 from tkinter import filedialog
@@ -16,8 +17,10 @@ class GUI:
 
 
 class ShowImage:
-    def __init__(self, root, img):
+    def __init__(self, root, img, width=1280, height=720):
         self._root = tkinter.Toplevel(root)
-        self._image = ImageTk.PhotoImage(img)
+        scaled_img = img.copy()
+        scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
+        self._image = ImageTk.PhotoImage(scaled_img)
         self.image_label = tkinter.Label(self._root, image=self._image)
         self.image_label.pack()
