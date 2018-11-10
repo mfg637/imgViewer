@@ -21,11 +21,13 @@ class ShowImage:
         self.image_label.pack()
         self._root.attributes("-topmost", True)
 
+
 class GUI:
     def __init__(self):
         self.root = tkinter.Tk()
         self._show_image_window = None
         self.root.geometry("840x720")
+        filesystem.directory.init()
         self.thumbs_wrapper = ScrolledFrame.VerticalScrolledFrame(self.root, width=820, height=720)
         self.thumbs_wrapper.pack()
         self._img_icon = ImageTk.PhotoImage(PIL.Image.open(os.path.join(
@@ -38,9 +40,21 @@ class GUI:
         self._show_image_window = ShowImage(self.root, img)
 
     def open_dir(self, directory_path):
+        os.chdir(directory_path)
+        for widget in self.thumbs_wrapper.interior.winfo_children():
+            widget.destroy()
         n = 4
-        i = 0
-        image_list = filesystem.get_image_files(directory_path)
+        i = 1
+        parent_dir_pointer = filesystem.directory.ParentDirectory(self)
+        parent_dir_pointer.create_widget(self.thumbs_wrapper.interior)
+        parent_dir_pointer.grid(column=0, row=0)
+        directory_list, image_list = filesystem.browse_current_folder()
+        for directory in directory_list:
+            item_wrapper = filesystem.directory.Directory(self, directory)
+            item_wrapper.create_widget(self.thumbs_wrapper.interior)
+            item_wrapper.grid(row=i//n, column=i % n, sticky=tkinter.N)
+            item_wrapper.update()
+            i += 1
         for image_path in image_list:
             item_wrapper = tkinter.Frame(self.thumbs_wrapper.interior)
             tkinter.Label(item_wrapper, image=self._img_icon).pack(side="top")
@@ -51,4 +65,6 @@ class GUI:
                 wraplength=192
             ).pack(side="top")
             item_wrapper.grid(row=i//n, column=i%n, sticky=tkinter.N)
+            item_wrapper.update()
             i += 1
+        #self.thumbs_wrapper.update()
