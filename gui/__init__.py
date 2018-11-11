@@ -48,6 +48,11 @@ class GUI:
         self._items_list = []
         self._page = 0
         bottom_panel = tkinter.Frame(self.root)
+        tkinter.ttk.Button(
+            bottom_panel,
+            text="parent dir",
+            command=lambda:self.open_dir('..')
+        ).pack(side="left")
         tkinter.Label(bottom_panel, text="Page: ").pack(side="left")
         self.page_count_field = tkinter.Entry(bottom_panel, width=5)
         self.page_count_field.pack(side="left")
