@@ -12,6 +12,7 @@ import filesystem
 from . import Image
 import re
 from math import ceil
+import threading
 
 unsigned_number_validate = re.compile(r"^\s*\d+\s*$")
 items_per_page = 52
@@ -66,6 +67,10 @@ class GUI:
     def show_image(self, img):
         self._show_image_window = ShowImage(self.root, img)
 
+    def __show_thumbnails(self):
+        for i in range(min(len(self._items_list)-self._page*items_per_page, items_per_page)):
+            self._items_list[self._page*items_per_page+i].show_thumbnail()
+
     def __page_rendering(self):
         self.thumbs_wrapper.to_start()
         for widget in self.thumbs_wrapper.interior.winfo_children():
@@ -77,7 +82,7 @@ class GUI:
             current_item.create_widget(self.thumbs_wrapper.interior)
             current_item.grid(row=i//n, column=i % n, sticky=tkinter.N)
             current_item.update()
-            i += 1
+        threading.Thread(target=self.__show_thumbnails).start()
 
     def open_dir(self, directory_path):
         os.chdir(directory_path)

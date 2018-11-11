@@ -29,6 +29,7 @@ class Image(somefile.SomeFile):
         self._wrapper = None
         self._icon = None
         self._file_name_label = None
+        self._thumbnail = None
 
     def create_widget(self, root, *pargs, **kwargs):
         self._wrapper = tkinter.Frame(root, *pargs, **kwargs)
@@ -47,3 +48,21 @@ class Image(somefile.SomeFile):
 
     def show_image(self, event):
         self._parent.show_image(decoders.open_image(str(self._path)))
+
+    def show_thumbnail(self):
+        exist = True
+        if not os.path.isdir('.thumbnails'):
+            exist = False
+            os.mkdir('.thumbnails')
+        if exist and os.path.exists(os.path.join(".thumbnails", self._path.stem+'.webp')):
+            img = decoders.open_image(os.path.join(".thumbnails", self._path.stem+'.webp'))
+            self._thumbnail = ImageTk.PhotoImage(img)
+            self._icon['image'] = self._thumbnail
+            img.close()
+        else:
+            img = decoders.open_image(str(self._path))
+            img.thumbnail((192, 144), PIL.Image.LANCZOS)
+            self._thumbnail = ImageTk.PhotoImage(img)
+            self._icon['image'] = self._thumbnail
+            img.save(os.path.join(".thumbnails", self._path.stem+'.webp'), quality=90)
+            img.close()

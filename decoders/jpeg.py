@@ -3,6 +3,7 @@
 
 import struct
 import subprocess
+import threading
 
 from . import CustomDecoder
 
@@ -40,6 +41,7 @@ class JPEGDecoder(CustomDecoder.CustomDecoder):
             self._file.close()
             raise Exception
         self._size = None
+        self._process = None
 
     def get_size(self):
         if self._size is None:
@@ -54,11 +56,19 @@ class JPEGDecoder(CustomDecoder.CustomDecoder):
             self._file.close()
         return self._size
 
+    def load_image(self):
+        data = self._file.read(1024)
+        while len(data):
+            self._process.stdin.write(data)
+            data = self._file.read(1024)
+        self._process.stdin.close()
+
     def decode(self):
-        self.get_size()
-        #self._file.close()
-        return subprocess.Popen(
-            ['djpeg', self._file_path],
+        self._process = subprocess.Popen(
+            ['djpeg'],
+            stdin=subprocess.PIPE,
             stdout=subprocess.PIPE
         )
-
+        self._process.stdin.write(b'\xff\xd8')
+        threading.Thread(target=self.load_image).start()
+        return self._process

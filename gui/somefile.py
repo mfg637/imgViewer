@@ -17,3 +17,6 @@ class SomeFile:
 
     def update(self):
         self._wrapper.update()
+
+    def show_thumbnail(self):
+        pass
