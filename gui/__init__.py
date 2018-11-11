@@ -39,13 +39,13 @@ class GUI:
     def __init__(self):
         self.root = tkinter.Tk()
         self._show_image_window = None
-        self.root.geometry("840x720")
+        self.root.geometry("840x730")
         filesystem.directory.init()
         Image.init()
         self.thumbs_wrapper = ScrolledFrame.VerticalScrolledFrame(self.root, width=820, height=700)
         self.thumbs_wrapper.pack(side="top")
         self._items_list = []
-        self._page =0
+        self._page = 0
         bottom_panel = tkinter.Frame(self.root)
         tkinter.Label(bottom_panel, text="Page: ").pack(side="left")
         self.page_count_field = tkinter.Entry(bottom_panel, width=5)
