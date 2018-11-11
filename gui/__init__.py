@@ -81,6 +81,7 @@ class GUI:
 
     def open_dir(self, directory_path):
         os.chdir(directory_path)
+        self.root.title(os.getcwd())
         self._items_list = []
         self._page = 0
         self._items_list.append(filesystem.directory.ParentDirectory(self))
