@@ -13,6 +13,7 @@ from . import Image
 import re
 from math import ceil
 import threading
+import decoders
 
 unsigned_number_validate = re.compile(r"^\s*\d+\s*$")
 items_per_page = 52
@@ -20,7 +21,7 @@ n = 4
 
 
 class ShowImage:
-    def __init__(self, root, img, width=1280, height=720):
+    def __init__(self, root, img, parent=None, _id=None, width=1280, height=720):
         self._root = tkinter.Toplevel(root)
         self._img = img
         self._image = None
@@ -32,6 +33,14 @@ class ShowImage:
         self._root.attributes("-topmost", True)
         self._root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self._root.bind("<Configure>", self.resize)
+        if parent is not None:
+            self._id = _id
+            self.image_list = parent.get_image_files()
+            self._root.bind("<Left>", self.__prev)
+            self._root.bind("<Right>", self.__next)
+        else:
+            self._id = None
+            self.image_list = None
 
     def on_closing(self):
         self._img.close()
@@ -50,6 +59,24 @@ class ShowImage:
         self._height = scaled_img.size[1]
         self.image_label['image'] = self._image
         self.image_label.pack()
+
+    def __prev(self, event):
+        if self._id > 0:
+            self._id -= 1
+            self._img = decoders.open_image(str(self.image_list[self._id]))
+            self.__show(
+                self._root.winfo_screenwidth(),
+                self._root.winfo_screenheight()
+            )
+
+    def __next(self, event):
+        if self._id < len(self.image_list)-1:
+            self._id += 1
+            self._img = decoders.open_image(str(self.image_list[self._id]))
+            self.__show(
+                self._root.winfo_screenwidth(),
+                self._root.winfo_screenheight()
+            )
 
 
 class GUI:
@@ -84,9 +111,14 @@ class GUI:
         self.next_btn = tkinter.ttk.Button(bottom_panel, text="next", command=self.next)
         self.next_btn.pack(side='left')
         bottom_panel.pack(side="top")
+        self._img_offset = None
+        self._image_list = []
 
-    def show_image(self, img):
-        self._show_image_window = ShowImage(self.root, img)
+    def show_image(self, img, id=None):
+        if id is not None:
+            self._show_image_window = ShowImage(self.root, img, self, id)
+        else:
+            self._show_image_window = ShowImage(self.root, img)
 
     def __show_thumbnails(self):
         for i in range(min(len(self._items_list)-self._page*items_per_page, items_per_page)):
@@ -114,8 +146,12 @@ class GUI:
         directory_list, file_paths_list = filesystem.browse_current_folder()
         for directory in directory_list:
             self._items_list.append(filesystem.directory.Directory(self, directory))
+        i = 0
+        self._image_list = []
         for image_path in file_paths_list:
-            self._items_list.append(Image.Image(image_path, self))
+            self._items_list.append(Image.Image(image_path, self, i))
+            self._image_list.append(image_path)
+            i += 1
         self._page_count_label['text'] = str(ceil((len(self._items_list)-1)/items_per_page))
         self.__page_rendering()
 
@@ -137,3 +173,6 @@ class GUI:
                 self.__page_rendering()
         else:
             tkinter.messagebox.showerror('Browser', "invalid page number")
+
+    def get_image_files(self):
+        return self._image_list

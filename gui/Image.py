@@ -23,8 +23,9 @@ def init():
 
 
 class Image(somefile.SomeFile):
-    def __init__(self, path, parent):
+    def __init__(self, path, parent, id):
         self._path = path
+        self._id = id
         self._parent = parent
         self._wrapper = None
         self._icon = None
@@ -47,7 +48,7 @@ class Image(somefile.SomeFile):
         self._file_name_label.bind("<Double-Button-1>", self.show_image)
 
     def show_image(self, event):
-        self._parent.show_image(decoders.open_image(str(self._path)))
+        self._parent.show_image(decoders.open_image(str(self._path)), self._id)
 
     def show_thumbnail(self):
         exist = True
