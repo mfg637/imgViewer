@@ -23,17 +23,33 @@ class ShowImage:
     def __init__(self, root, img, width=1280, height=720):
         self._root = tkinter.Toplevel(root)
         self._img = img
-        scaled_img = img.copy()
-        scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
-        self._image = ImageTk.PhotoImage(scaled_img)
-        self.image_label = tkinter.Label(self._root, image=self._image)
+        self._image = None
+        self._width = None
+        self._height = None
+        self.image_label = tkinter.Label(self._root)
         self.image_label.pack()
+        self.__show(width, height)
         self._root.attributes("-topmost", True)
         self._root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self._root.bind("<Configure>", self.resize)
 
     def on_closing(self):
         self._img.close()
         self._root.destroy()
+
+    def resize(self, event):
+        if event.width != self._width or event.height != self._height:
+            self.__show(event.width, event.height)
+
+    def __show(self, width, height):
+        scaled_img = self._img.copy()
+        scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
+        self._image = ImageTk.PhotoImage(scaled_img)
+        self._root.geometry("{}x{}".format(*scaled_img.size))
+        self._width = scaled_img.size[0]
+        self._height = scaled_img.size[1]
+        self.image_label['image'] = self._image
+        self.image_label.pack()
 
 
 class GUI:
