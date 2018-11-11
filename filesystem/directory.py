@@ -7,6 +7,7 @@ from PIL import ImageTk
 import os
 import sys
 from pathlib import Path
+from gui import somefile
 
 folder_icon = None
 up_directory_icon = None
@@ -27,10 +28,10 @@ def init():
      )))
 
 
-class Directory():
+class Directory(somefile.SomeFile):
     def __init__(self, parent, directory):
         self.directory = directory
-        self.parent = parent
+        self._parent = parent
         self._wrapper = None
         self._icon = None
         self._dir_name_label = None
@@ -50,14 +51,8 @@ class Directory():
         self._icon.bind("<Double-Button-1>", self.open_dir)
         self._dir_name_label.bind("<Double-Button-1>", self.open_dir)
 
-    def grid(self, **kwargs):
-        self._wrapper.grid(**kwargs)
-
     def open_dir(self, event):
-        self.parent.open_dir(str(self.directory))
-
-    def update(self):
-        self._wrapper.update()
+        self._parent.open_dir(str(self.directory))
 
 
 class ParentDirectory(Directory):
