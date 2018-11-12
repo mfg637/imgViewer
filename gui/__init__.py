@@ -25,6 +25,7 @@ class GUI:
         self.root.geometry("840x730")
         filesystem.directory.init()
         Image.init()
+        imgViewer.init()
         self.thumbs_wrapper = ScrolledFrame.VerticalScrolledFrame(self.root, width=820, height=700)
         self.thumbs_wrapper.pack(side="top")
         self._items_list = []
