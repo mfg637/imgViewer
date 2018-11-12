@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import PIL.Image
-from PIL import ImageTk
 import tkinter
 import tkinter.ttk
 from tkinter import messagebox
@@ -13,70 +11,11 @@ from . import Image
 import re
 from math import ceil
 import threading
-import decoders
+from . import imgViewer
 
 unsigned_number_validate = re.compile(r"^\s*\d+\s*$")
 items_per_page = 52
 n = 4
-
-
-class ShowImage:
-    def __init__(self, root, img, parent=None, _id=None, width=1280, height=720):
-        self._root = tkinter.Toplevel(root)
-        self._img = img
-        self._image = None
-        self._width = None
-        self._height = None
-        self.image_label = tkinter.Label(self._root)
-        self.image_label.pack()
-        self.__show(width, height)
-        self._root.attributes("-topmost", True)
-        self._root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        self._root.bind("<Configure>", self.resize)
-        if parent is not None:
-            self._id = _id
-            self.image_list = parent.get_image_files()
-            self._root.bind("<Left>", self.__prev)
-            self._root.bind("<Right>", self.__next)
-        else:
-            self._id = None
-            self.image_list = None
-
-    def on_closing(self):
-        self._img.close()
-        self._root.destroy()
-
-    def resize(self, event):
-        if event.width != self._width or event.height != self._height:
-            self.__show(event.width, event.height)
-
-    def __show(self, width, height):
-        scaled_img = self._img.copy()
-        scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
-        self._image = ImageTk.PhotoImage(scaled_img)
-        self._root.geometry("{}x{}".format(*scaled_img.size))
-        self._width = scaled_img.size[0]
-        self._height = scaled_img.size[1]
-        self.image_label['image'] = self._image
-        self.image_label.pack()
-
-    def __prev(self, event):
-        if self._id > 0:
-            self._id -= 1
-            self._img = decoders.open_image(str(self.image_list[self._id]))
-            self.__show(
-                self._root.winfo_screenwidth(),
-                self._root.winfo_screenheight()
-            )
-
-    def __next(self, event):
-        if self._id < len(self.image_list)-1:
-            self._id += 1
-            self._img = decoders.open_image(str(self.image_list[self._id]))
-            self.__show(
-                self._root.winfo_screenwidth(),
-                self._root.winfo_screenheight()
-            )
 
 
 class GUI:
@@ -116,9 +55,9 @@ class GUI:
 
     def show_image(self, img, id=None):
         if id is not None:
-            self._show_image_window = ShowImage(self.root, img, self, id)
+            self._show_image_window = imgViewer.ShowImage(self.root, img, self, id)
         else:
-            self._show_image_window = ShowImage(self.root, img)
+            self._show_image_window = imgViewer.ShowImage(self.root, img)
 
     def __show_thumbnails(self):
         for i in range(min(len(self._items_list)-self._page*items_per_page, items_per_page)):
