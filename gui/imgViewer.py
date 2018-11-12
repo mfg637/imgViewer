@@ -90,6 +90,7 @@ class ShowImage:
             self.__show()
 
     def __show(self):
+
         if self._prev_img_btn is not None:
             self._canvas.delete(self._prev_img_btn)
             self._canvas.delete(self._next_img_btn)
@@ -129,31 +130,32 @@ class ShowImage:
             self.__show()
 
     def mouse_move(self, event):
-        if 8 <= event.x <= 72 and \
-                (height / 2 - 16) <= event.y <= (height / 2 + 16):
-            if not self._left_arrow_active:
-                self._canvas.delete(self._prev_img_btn)
-                self._left_arrow_active = True
-                self._right_arrow_active = False
-                self.__draw_prev_btn_active()
-        else:
-            if self._left_arrow_active:
-                self._left_arrow_active = False
-                self._canvas.delete(self._prev_img_btn)
-                self.__draw_prev_btn_default()
-            if (self._root.winfo_screenwidth() - 72) <= event.x <= \
-                    (self._root.winfo_screenwidth() - 8) and \
+        if self._controls_visible:
+            if 8 <= event.x <= 72 and \
                     (height / 2 - 16) <= event.y <= (height / 2 + 16):
-                if not self._right_arrow_active:
-                    self._right_arrow_active = True
-                    self._left_arrow_active = False
-                    self._canvas.delete(self._next_img_btn)
-                    self.__draw_next_btn_active()
-            else:
-                if self._right_arrow_active:
+                if not self._left_arrow_active:
+                    self._canvas.delete(self._prev_img_btn)
+                    self._left_arrow_active = True
                     self._right_arrow_active = False
-                    self._canvas.delete(self._next_img_btn)
-                    self.__draw_next_btn_default()
+                    self.__draw_prev_btn_active()
+            else:
+                if self._left_arrow_active:
+                    self._left_arrow_active = False
+                    self._canvas.delete(self._prev_img_btn)
+                    self.__draw_prev_btn_default()
+                if (self._root.winfo_screenwidth() - 72) <= event.x <= \
+                        (self._root.winfo_screenwidth() - 8) and \
+                        (height / 2 - 16) <= event.y <= (height / 2 + 16):
+                    if not self._right_arrow_active:
+                        self._right_arrow_active = True
+                        self._left_arrow_active = False
+                        self._canvas.delete(self._next_img_btn)
+                        self.__draw_next_btn_active()
+                else:
+                    if self._right_arrow_active:
+                        self._right_arrow_active = False
+                        self._canvas.delete(self._next_img_btn)
+                        self.__draw_next_btn_default()
 
     def on_click(self, event):
         if self._left_arrow_active:
