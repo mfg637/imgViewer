@@ -94,6 +94,8 @@ class ShowImage:
             self._id = None
             self.image_list = None
         self._root.focus()
+        self._hide_cursor_timer = None
+        self._cursor_visible = True
 
     def on_closing(self, event=None):
         self._img.close()
@@ -160,6 +162,7 @@ class ShowImage:
                     self._canvas.delete(self._prev_img_btn)
                     self._left_arrow_active = True
                     self.__draw_prev_btn_active()
+                    self._root['cursor'] = 'hand2'
                 return None
             if self._left_arrow_active:
                 self._left_arrow_active = False
@@ -172,6 +175,7 @@ class ShowImage:
                     self._right_arrow_active = True
                     self._canvas.delete(self._next_img_btn)
                     self.__draw_next_btn_active()
+                    self._root['cursor'] = 'hand2'
                 return None
             if self._right_arrow_active:
                 self._right_arrow_active = False
@@ -183,11 +187,19 @@ class ShowImage:
                     self._close_btn_active = True
                     self._canvas.delete(self._close_btn)
                     self.__draw_close_btn_active()
+                    self._root['cursor'] = 'hand2'
                 return None
             if self._close_btn_active:
                 self._close_btn_active = False
                 self._canvas.delete(self._close_btn)
                 self.__draw_close_btn_default()
+            self._root['cursor'] = 'arrow'
+        else:
+            if self._hide_cursor_timer is not None:
+                self._root.after_cancel(self._hide_cursor_timer)
+            if not self._controls_visible:
+                self._root['cursor'] = 'arrow'
+            self._root.after(1000, self.__hide_cursor)
 
     def on_click(self, event):
         if self._left_arrow_active:
@@ -202,11 +214,15 @@ class ShowImage:
                 self._canvas.delete(self._prev_img_btn)
                 self._canvas.delete(self._next_img_btn)
                 self._canvas.delete(self._close_btn)
+                self._root['cursor'] = 'arrow'
+                self._hide_cursor_timer = self._root.after(1000, self.__hide_cursor)
             else:
                 self._controls_visible = True
                 self.__draw_prev_btn_default()
                 self.__draw_next_btn_default()
                 self.__draw_close_btn_default()
+                self._root.after_cancel(self._hide_cursor_timer)
+                self._root['cursor'] = 'arrow'
 
     def __draw_prev_btn_default(self):
         self._prev_img_btn = self._canvas.create_image(
@@ -255,3 +271,6 @@ class ShowImage:
             anchor=tkinter.NW,
             image=close_btn_active
         )
+
+    def __hide_cursor(self):
+        self._root['cursor'] = 'none'
