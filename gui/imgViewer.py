@@ -80,6 +80,7 @@ class ShowImage:
         self._right_arrow_active = False
         self._close_btn_active = False
         self._controls_visible = True
+        self._animation_tick = None
         self.__show()
         self._root.attributes("-topmost", True)
         self._root.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -112,12 +113,13 @@ class ShowImage:
             self.__show()
 
     def __show(self):
-
         if self._prev_img_btn is not None:
             self._canvas.delete(self._prev_img_btn)
             self._canvas.delete(self._next_img_btn)
             self._canvas.delete(self._close_btn)
-        scaled_img = self._img.copy()
+        if self._animation_tick is not None:
+            self._root.after_cancel(self._animation_tick)
+        scaled_img = self._img.convert(mode='RGBA')
         scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
         self._root.geometry("{}x{}".format(width, height))
         self._image = ImageTk.PhotoImage(scaled_img)
@@ -141,6 +143,22 @@ class ShowImage:
             self.__draw_close_btn_default()
         self._canvas.bind("<Motion>", self.mouse_move)
         self._canvas.bind("<Button-1>", self.on_click)
+        if 'loop' in self._img.info and self._img.info['loop'] != 1:
+            if isinstance(self._img.info['duration'], (list, tuple)):
+                self._animation_tick = self._root.after(
+                    self._img.info['duration'][self._img.tell()],
+                    self.__frame_update
+                )
+            elif self._img.info['duration'] > 0:
+                self._animation_tick = self._root.after(
+                    self._img.info['duration'],
+                    self.__frame_update
+                )
+            else:
+                self._animation_tick = self._root.after(
+                    67,
+                    self.__frame_update
+               )
 
     def __prev(self, event=None):
         if self._id > 0:
@@ -274,3 +292,34 @@ class ShowImage:
 
     def __hide_cursor(self):
         self._root['cursor'] = 'none'
+
+    def __frame_update(self):
+        try:
+            self._img.seek(self._img.tell() + 1)
+        except EOFError:
+            self._img.seek(0)
+        scaled_img = self._img.convert(mode='RGBA')
+        scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
+        self._image = ImageTk.PhotoImage(scaled_img)
+        self._canvas.delete(self._canvas_img)
+        self._canvas_img = self._canvas.create_image(
+            int((width - scaled_img.width) / 2),
+            int((height - scaled_img.height) / 2),
+            anchor=tkinter.NW,
+            image=self._image
+        )
+        if isinstance(self._img.info['duration'], (list, tuple)):
+            self._animation_tick = self._root.after(
+                self._img.info['duration'][self._img.tell()],
+                self.__frame_update
+            )
+        elif self._img.info['duration'] > 0:
+            self._animation_tick = self._root.after(
+                self._img.info['duration'],
+                self.__frame_update
+            )
+        else:
+            self._animation_tick = self._root.after(
+                67,
+                self.__frame_update
+            )
