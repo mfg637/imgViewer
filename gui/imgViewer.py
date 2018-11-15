@@ -113,6 +113,7 @@ class ShowImage:
             self.__show()
 
     def __show(self):
+        print('info', self._img.info)
         if self._prev_img_btn is not None:
             self._canvas.delete(self._prev_img_btn)
             self._canvas.delete(self._next_img_btn)
@@ -150,6 +151,7 @@ class ShowImage:
                     self.__frame_update
                 )
             elif self._img.info['duration'] > 0:
+                print(self._img.info['duration'])
                 self._animation_tick = self._root.after(
                     self._img.info['duration'],
                     self.__frame_update
@@ -314,6 +316,7 @@ class ShowImage:
                 self.__frame_update
             )
         elif self._img.info['duration'] > 0:
+            print(self._img.info['duration'])
             self._animation_tick = self._root.after(
                 self._img.info['duration'],
                 self.__frame_update

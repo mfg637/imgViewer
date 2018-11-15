@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import PIL.Image
-from . import jpeg
+from . import jpeg, ffmpeg_webm_video
 
 
 def open_image(file_path):
