@@ -299,6 +299,9 @@ class ShowImage:
             self._img.seek(self._img.tell() + 1)
         except EOFError:
             self._img.seek(0)
+        self._canvas.delete(self._prev_img_btn)
+        self._canvas.delete(self._next_img_btn)
+        self._canvas.delete(self._close_btn)
         scaled_img = self._img.convert(mode='RGBA')
         scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
         self._image = ImageTk.PhotoImage(scaled_img)
@@ -324,3 +327,16 @@ class ShowImage:
                 67,
                 self.__frame_update
             )
+        if self._controls_visible:
+            if self._left_arrow_active:
+                self.__draw_prev_btn_active()
+            else:
+                self.__draw_prev_btn_default()
+            if self._right_arrow_active:
+                self.__draw_next_btn_active()
+            else:
+                self.__draw_next_btn_default()
+            if self._close_btn_active:
+                self.__draw_close_btn_active()
+            else:
+                self.__draw_close_btn_default()
