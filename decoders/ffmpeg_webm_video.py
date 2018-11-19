@@ -45,6 +45,7 @@ class WebM_Video(ImageFile.ImageFile):
         self.process = subprocess.Popen(commandline, stdout=subprocess.PIPE)
         self._frame_size = self.size[0]*self.size[1]*3
         self.info['duration_of_video'] = float(data['format']['duration'])
+        self.fp.close()
         if 30 >= self.info['duration_of_video']:
             self._exclusive_fp = None
             self.info['loop'] = 0
