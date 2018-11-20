@@ -59,6 +59,69 @@ def init():
     img.close()
 
 
+class ButtonImage:
+    def __init__(self, root, canvas, default_image, active_image,
+                 x_offset, y_offset, predicate, on_click, visibility=True):
+        self._root = root
+        self._canvas = canvas
+        self._default_image = default_image
+        self._active_image = active_image,
+        self._x_offset = x_offset
+        self._y_offset = y_offset
+        self._predicate = predicate
+        self._is_active = False
+        self.is_visible = visibility
+        self._button = None
+        self._on_click = on_click
+
+    def __draw_default(self):
+        self._button = self._canvas.create_image(
+            self._x_offset(),
+            self._y_offset(),
+            anchor=tkinter.NW,
+            image=self._default_image
+        )
+
+    def __draw_active(self):
+        self._button = self._canvas.create_image(
+            self._x_offset(),
+            self._y_offset(),
+            anchor=tkinter.NW,
+            image=self._active_image
+        )
+
+    def update(self, x_cords, y_cords):
+        if self.is_visible:
+            if self._predicate(x_cords, y_cords):
+                if not self._is_active:
+                    self._canvas.delete(self._button)
+                    self._is_active = True
+                    self.__draw_active()
+                    self._root['cursor'] = 'hand2'
+                return None
+            if self._is_active:
+                self._is_active = False
+                self._canvas.delete(self._button)
+                self.__draw_default()
+        return self._is_active
+
+    def redraw(self):
+        if self._button is not None:
+            self._canvas.delete(self._button)
+        if self.is_visible:
+            if self._is_active:
+                self.__draw_active()
+            else:
+                self.__draw_default()
+        else:
+            self._button = None
+
+    def click_event(self):
+        if self._is_active:
+            self._on_click()
+        return self._is_active
+
+
 class ShowImage:
     def __init__(self, root, img, parent=None, _id=None):
         global width
@@ -70,15 +133,45 @@ class ShowImage:
         self._img = img
         self._image = None
         self._canvas_img = None
-        self._prev_img_btn = None
-        self._next_img_btn = None
-        self._close_btn = None
         self._canvas = tkinter.Canvas(self._root, background="black", highlightthickness=0)
         self._canvas.pack()
         self._canvas.bind("<Double-Button-1>", self.on_closing)
-        self._left_arrow_active = False
-        self._right_arrow_active = False
-        self._close_btn_active = False
+        self._buttons = [
+            ButtonImage(
+                self._root,
+                self._canvas,
+                left_arrow_img,
+                left_arrow_active_img,
+                lambda: 8,
+                lambda: int(height / 2 - 16),
+                lambda x, y: 8 <= x <= 72 and \
+                             (height / 2 - 16) <= y <= (height / 2 + 16),
+                self.__prev
+            ),
+            ButtonImage(
+                self._root,
+                self._canvas,
+                right_arrow_img,
+                right_arrow_active_img,
+                lambda: self._root.winfo_screenwidth() - 72,
+                lambda: int(height / 2 - 16),
+                lambda x, y: (self._root.winfo_screenwidth() - 72) <= x <= \
+                             (self._root.winfo_screenwidth() - 8) and \
+                             (height / 2 - 16) <= y <= (height / 2 + 16),
+                self.__next
+            ),
+            ButtonImage(
+                self._root,
+                self._canvas,
+                close_btn_default,
+                close_btn_active,
+                lambda: self._root.winfo_screenwidth() - 32,
+                lambda: 0,
+                lambda x, y: (self._root.winfo_screenwidth() - 32) <= x <= self._root.winfo_screenwidth() and \
+                             0 <= y < 32,
+                self.on_closing
+            )
+        ]
         self._controls_visible = True
         self._animation_tick = None
         self.__show()
@@ -114,10 +207,6 @@ class ShowImage:
 
     def __show(self):
         print('info', self._img.info)
-        if self._prev_img_btn is not None:
-            self._canvas.delete(self._prev_img_btn)
-            self._canvas.delete(self._next_img_btn)
-            self._canvas.delete(self._close_btn)
         if self._animation_tick is not None:
             self._root.after_cancel(self._animation_tick)
         scaled_img = self._img.convert(mode='RGBA')
@@ -133,15 +222,9 @@ class ShowImage:
             image=self._image
         )
         if self._controls_visible:
-            if self._left_arrow_active:
-                self.__draw_prev_btn_active()
-            else:
-                self.__draw_prev_btn_default()
-            if self._right_arrow_active:
-                self.__draw_next_btn_active()
-            else:
-                self.__draw_next_btn_default()
-            self.__draw_close_btn_default()
+            for button in self._buttons:
+                button.is_visible = True
+                button.redraw()
         self._canvas.bind("<Motion>", self.mouse_move)
         self._canvas.bind("<Button-1>", self.on_click)
         if 'loop' in self._img.info and self._img.info['loop'] != 1:
@@ -159,7 +242,7 @@ class ShowImage:
                 self._animation_tick = self._root.after(
                     67,
                     self.__frame_update
-               )
+                )
 
     def __prev(self, event=None):
         if self._id > 0:
@@ -175,44 +258,13 @@ class ShowImage:
 
     def mouse_move(self, event):
         if self._controls_visible:
-            if 8 <= event.x <= 72 and \
-                    (height / 2 - 16) <= event.y <= (height / 2 + 16):
-                if not self._left_arrow_active:
-                    self._canvas.delete(self._prev_img_btn)
-                    self._left_arrow_active = True
-                    self.__draw_prev_btn_active()
-                    self._root['cursor'] = 'hand2'
-                return None
-            if self._left_arrow_active:
-                self._left_arrow_active = False
-                self._canvas.delete(self._prev_img_btn)
-                self.__draw_prev_btn_default()
-            if (self._root.winfo_screenwidth() - 72) <= event.x <= \
-                    (self._root.winfo_screenwidth() - 8) and \
-                    (height / 2 - 16) <= event.y <= (height / 2 + 16):
-                if not self._right_arrow_active:
-                    self._right_arrow_active = True
-                    self._canvas.delete(self._next_img_btn)
-                    self.__draw_next_btn_active()
-                    self._root['cursor'] = 'hand2'
-                return None
-            if self._right_arrow_active:
-                self._right_arrow_active = False
-                self._canvas.delete(self._next_img_btn)
-                self.__draw_next_btn_default()
-            if (self._root.winfo_screenwidth() - 32) <= event.x <= self._root.winfo_screenwidth() and \
-                    0 <= event.y < 32:
-                if not self._close_btn_active:
-                    self._close_btn_active = True
-                    self._canvas.delete(self._close_btn)
-                    self.__draw_close_btn_active()
-                    self._root['cursor'] = 'hand2'
-                return None
-            if self._close_btn_active:
-                self._close_btn_active = False
-                self._canvas.delete(self._close_btn)
-                self.__draw_close_btn_default()
-            self._root['cursor'] = 'arrow'
+            has_active_button = False
+            for button in self._buttons:
+                active = button.update(event.x, event.y)
+                if active:
+                    has_active_button = True
+            if not has_active_button:
+                self._root['cursor'] = 'arrow'
         else:
             if self._hide_cursor_timer is not None:
                 self._root.after_cancel(self._hide_cursor_timer)
@@ -221,75 +273,27 @@ class ShowImage:
             self._root.after(1000, self.__hide_cursor)
 
     def on_click(self, event):
-        if self._left_arrow_active:
-            self.__prev()
-        elif self._right_arrow_active:
-            self.__next()
-        elif self._close_btn_active:
-            self.on_closing()
-        else:
+        has_active_button = False
+        for button in self._buttons:
+            active = button.click_event()
+            if active:
+                has_active_button = True
+
+        if not has_active_button:
             if self._controls_visible:
                 self._controls_visible = False
-                self._canvas.delete(self._prev_img_btn)
-                self._canvas.delete(self._next_img_btn)
-                self._canvas.delete(self._close_btn)
+                for button in self._buttons:
+                    button.is_visible = False
+                    button.redraw()
                 self._root['cursor'] = 'arrow'
                 self._hide_cursor_timer = self._root.after(1000, self.__hide_cursor)
             else:
                 self._controls_visible = True
-                self.__draw_prev_btn_default()
-                self.__draw_next_btn_default()
-                self.__draw_close_btn_default()
+                for button in self._buttons:
+                    button.is_visible = True
+                    button.redraw()
                 self._root.after_cancel(self._hide_cursor_timer)
                 self._root['cursor'] = 'arrow'
-
-    def __draw_prev_btn_default(self):
-        self._prev_img_btn = self._canvas.create_image(
-            8,
-            int(height / 2 - 16),
-            anchor=tkinter.NW,
-            image=left_arrow_img
-        )
-
-    def __draw_prev_btn_active(self):
-        self._prev_img_btn = self._canvas.create_image(
-            8,
-            int(height / 2 - 16),
-            anchor=tkinter.NW,
-            image=left_arrow_active_img
-        )
-
-    def __draw_next_btn_default(self):
-        self._next_img_btn = self._canvas.create_image(
-            self._root.winfo_screenwidth() - 72,
-            int(height / 2 - 16),
-            anchor=tkinter.NW,
-            image=right_arrow_img
-        )
-
-    def __draw_next_btn_active(self):
-        self._next_img_btn = self._canvas.create_image(
-            self._root.winfo_screenwidth() - 72,
-            int(height / 2 - 16),
-            anchor=tkinter.NW,
-            image=right_arrow_active_img
-        )
-
-    def __draw_close_btn_default(self):
-        self._close_btn = self._canvas.create_image(
-            self._root.winfo_screenwidth() - 32,
-            0,
-            anchor=tkinter.NW,
-            image=close_btn_default
-        )
-
-    def __draw_close_btn_active(self):
-        self._close_btn = self._canvas.create_image(
-            self._root.winfo_screenwidth() - 32,
-            0,
-            anchor=tkinter.NW,
-            image=close_btn_active
-        )
 
     def __hide_cursor(self):
         self._root['cursor'] = 'none'
@@ -299,9 +303,6 @@ class ShowImage:
             self._img.seek(self._img.tell() + 1)
         except EOFError:
             self._img.seek(0)
-        self._canvas.delete(self._prev_img_btn)
-        self._canvas.delete(self._next_img_btn)
-        self._canvas.delete(self._close_btn)
         scaled_img = self._img.convert(mode='RGBA')
         scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
         self._image = ImageTk.PhotoImage(scaled_img)
@@ -328,15 +329,6 @@ class ShowImage:
                 self.__frame_update
             )
         if self._controls_visible:
-            if self._left_arrow_active:
-                self.__draw_prev_btn_active()
-            else:
-                self.__draw_prev_btn_default()
-            if self._right_arrow_active:
-                self.__draw_next_btn_active()
-            else:
-                self.__draw_next_btn_default()
-            if self._close_btn_active:
-                self.__draw_close_btn_active()
-            else:
-                self.__draw_close_btn_default()
+            for button in self._buttons:
+                button.is_visible = True
+                button.redraw()
