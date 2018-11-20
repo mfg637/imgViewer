@@ -98,8 +98,7 @@ class ButtonImage:
                     self._is_active = True
                     self.__draw_active()
                     self._root['cursor'] = 'hand2'
-                return None
-            if self._is_active:
+            elif self._is_active:
                 self._is_active = False
                 self._canvas.delete(self._button)
                 self.__draw_default()
