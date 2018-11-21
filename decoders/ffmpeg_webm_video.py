@@ -29,13 +29,17 @@ class WebM_Video(ImageFile.ImageFile):
         fps = eval(video['r_frame_rate'])
         self.info['duration'] = int(round(1 / fps * 1000))
         self._size = (video["width"], video["height"])
-        self.size = self._size
-
         self.mode = "RGB"
-
-        self.tile = [
-            ("raw", (0, 0) + self.size, 0, (self.mode, 0, 1))
-        ]
+        try:
+            self.size = self._size
+        except AttributeError:
+            self.tile = [
+                ("raw", (0, 0) + self._size, 0, (self.mode, 0, 1))
+            ]
+        else:
+            self.tile = [
+                ("raw", (0, 0) + self.size, 0, (self.mode, 0, 1))
+            ]
 
         commandline = ['ffmpeg',
                        '-i', self.filename,
