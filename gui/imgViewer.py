@@ -132,6 +132,9 @@ class ShowImage:
         self._img = img
         self._image = None
         self._canvas_img = None
+        self._frames = []
+        self._read_done = False
+        self._current_frame = 0
         self._canvas = tkinter.Canvas(self._root, background="black", highlightthickness=0)
         self._canvas.pack()
         self._canvas.bind("<Double-Button-1>", self.on_closing)
@@ -208,10 +211,13 @@ class ShowImage:
         print('info', self._img.info)
         if self._animation_tick is not None:
             self._root.after_cancel(self._animation_tick)
+        self._frames = []
+        self._read_done = False
         scaled_img = self._img.convert(mode='RGBA')
         scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
         self._root.geometry("{}x{}".format(width, height))
         self._image = ImageTk.PhotoImage(scaled_img)
+        self._frames.append(self._image)
         self._canvas['width'] = width
         self._canvas['height'] = height
         self._canvas_img = self._canvas.create_image(
@@ -298,17 +304,28 @@ class ShowImage:
         self._root['cursor'] = 'none'
 
     def __frame_update(self):
-        try:
-            self._img.seek(self._img.tell() + 1)
-        except EOFError:
-            self._img.seek(0)
-        scaled_img = self._img.convert(mode='RGBA')
-        scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
-        self._image = ImageTk.PhotoImage(scaled_img)
+        if self._read_done:
+            self._image = self._frames[self._current_frame]
+            self._current_frame +=1
+            if self._current_frame >= len(self._frames):
+                self._current_frame = 0
+        else:
+            try:
+                self._img.seek(self._img.tell() + 1)
+            except EOFError:
+                self._img.seek(0)
+                self._read_done = True
+                self._current_frame = 0
+            scaled_img = self._img.convert(mode='RGBA')
+            scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
+            self._image = ImageTk.PhotoImage(scaled_img)
+            self._frames.append(self._image)
+            self._img_width = scaled_img.width
+            self._img_height = scaled_img.height
         self._canvas.delete(self._canvas_img)
         self._canvas_img = self._canvas.create_image(
-            int((width - scaled_img.width) / 2),
-            int((height - scaled_img.height) / 2),
+            int((width - self._img_width) / 2),
+            int((height - self._img_height) / 2),
             anchor=tkinter.NW,
             image=self._image
         )
