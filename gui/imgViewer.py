@@ -319,9 +319,10 @@ class ShowImage:
                     self._read_done = True
                 self._current_frame = 0
             scaled_img = self._img.convert(mode='RGBA')
-            scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
+            scaled_img.thumbnail((width, height), PIL.Image.BILINEAR)
             self._image = ImageTk.PhotoImage(scaled_img)
-            self._frames.append(self._image)
+            if self._img.tell()<len(self._frames):
+                self._frames.append(self._image)
             self._img_width = scaled_img.width
             self._img_height = scaled_img.height
         self._canvas.delete(self._canvas_img)
