@@ -314,7 +314,9 @@ class ShowImage:
                 self._img.seek(self._img.tell() + 1)
             except EOFError:
                 self._img.seek(0)
-                self._read_done = True
+                if self._img.format != 'WEBP':
+                    print(self._img.info['duration'])
+                    self._read_done = True
                 self._current_frame = 0
             scaled_img = self._img.convert(mode='RGBA')
             scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
@@ -334,16 +336,18 @@ class ShowImage:
                 self._img.info['duration'][self._img.tell()],
                 self.__frame_update
             )
-        elif self._img.info['duration'] > 0:
+        elif 'duration' in self._img.info and self._img.info['duration'] > 0:
             self._animation_tick = self._root.after(
                 self._img.info['duration'],
                 self.__frame_update
             )
-        else:
+        elif 'duration' in self._img.info:
             self._animation_tick = self._root.after(
                 67,
                 self.__frame_update
             )
+        else:
+            threading.Thread(target=self.__frame_update).start()
         if self._controls_visible:
             for button in self._buttons:
                 button.is_visible = True
