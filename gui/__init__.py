@@ -54,9 +54,9 @@ class GUI:
         self._img_offset = None
         self._image_list = []
 
-    def show_image(self, img, id=None):
-        if id is not None:
-            self._show_image_window = imgViewer.ShowImage(self.root, img, self, id)
+    def show_image(self, img):
+        if type(img) is int:
+            self._show_image_window = imgViewer.ShowImage(self.root, parent=self, _id=img)
         else:
             self._show_image_window = imgViewer.ShowImage(self.root, img)
 

@@ -48,7 +48,7 @@ class Image(somefile.SomeFile):
         self._file_name_label.bind("<Double-Button-1>", self.show_image)
 
     def show_image(self, event):
-        self._parent.show_image(decoders.open_image(str(self._path)), self._id)
+        self._parent.show_image(self._id)
 
     def show_thumbnail(self):
         exist = True

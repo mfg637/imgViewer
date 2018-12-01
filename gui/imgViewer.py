@@ -18,6 +18,10 @@ left_arrow_active_img = None
 right_arrow_active_img = None
 close_btn_default = None
 close_btn_active = None
+spinner = []
+spinner_duration = 0
+spinner_x_cords = None
+spinner_y_cords = None
 
 
 def init():
@@ -27,6 +31,8 @@ def init():
     global right_arrow_active_img
     global close_btn_default
     global close_btn_active
+    global spinner
+    global spinner_duration
     img = PIL.Image.open(os.path.join(
         os.path.dirname(sys.argv[0]),
         "images",
@@ -56,6 +62,18 @@ def init():
         "close_btn_active.png"
     ))
     close_btn_active = ImageTk.PhotoImage(img)
+    img.close()
+    img = PIL.Image.open(os.path.join(
+        os.path.dirname(sys.argv[0]),
+        "images",
+        "Spinner-1s-200px.webp"
+    ))
+    try:
+        while(True):
+            spinner.append(ImageTk.PhotoImage(img))
+            img.seek(img.tell()+1)
+    except EOFError:
+        spinner_duration = img.info['duration']
     img.close()
 
 
@@ -122,22 +140,28 @@ class ButtonImage:
 
 
 class ShowImage:
-    def __init__(self, root, img, parent=None, _id=None):
+    def __init__(self, root, img=None, parent=None, _id=None):
+        global spinner_x_cords
+        global spinner_y_cords
         global width
         global height
         self._root = tkinter.Toplevel(root, background="black")
         self._root.attributes("-fullscreen", True)
+        spinner_x_cords = self._root.winfo_screenwidth() / 2 - 100
+        spinner_y_cords = self._root.winfo_screenheight() / 2 - 100
         width = self._root.winfo_screenwidth()
         height = self._root.winfo_screenheight()
+        self._read_done = False
+        self._canvas = tkinter.Canvas(self._root, background="black", highlightthickness=0)
+        self._canvas.pack()
+        self._canvas.bind("<Double-Button-1>", self.on_closing)
+        self._spinner_frame = 0
+        self._spinner_image = None
         self._img = img
         self._image = None
         self._canvas_img = None
         self._frames = []
-        self._read_done = False
         self._current_frame = 0
-        self._canvas = tkinter.Canvas(self._root, background="black", highlightthickness=0)
-        self._canvas.pack()
-        self._canvas.bind("<Double-Button-1>", self.on_closing)
         self._buttons = [
             ButtonImage(
                 self._root,
@@ -184,14 +208,18 @@ class ShowImage:
         else:
             self._id = None
             self.image_list = None
-        self.__show()
+        #self.__show(img)
         self._root.attributes("-topmost", True)
         self._root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        self._root.bind("<Configure>", self.resize)
         self._root.bind("<Escape>", self.on_closing)
         self._root.focus()
         self._hide_cursor_timer = None
         self._cursor_visible = True
+        self._canvas['width'] = width
+        self._canvas['height'] = height
+        threading.Thread(target=self.draw_spinner).start()
+        threading.Thread(target=self.__show, args=(img,)).start()
+
 
     def on_closing(self, event=None):
         self._img.close()
@@ -207,20 +235,21 @@ class ShowImage:
             height = event.height
             self.__show()
 
-    def __show(self):
-        print('info', self._img.info)
+    def __show(self, img=None):
+        self._read_done = False
         if self._animation_tick is not None:
             self._root.after_cancel(self._animation_tick)
+        if img is None:
+            self._img = decoders.open_image(str(self.image_list[self._id]))
+        else:
+            self._img = img
         self._frames = []
-        self._read_done = False
         self._frames_duration = []
         scaled_img = self._img.convert(mode='RGBA')
         scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
         self._root.geometry("{}x{}".format(width, height))
         self._image = ImageTk.PhotoImage(scaled_img)
         self._frames.append(self._image)
-        self._canvas['width'] = width
-        self._canvas['height'] = height
         self._canvas_img = self._canvas.create_image(
             int((width - scaled_img.width) / 2),
             int((height - scaled_img.height) / 2),
@@ -252,18 +281,22 @@ class ShowImage:
                     67,
                     self.__frame_update
                 )
+        else:
+            self._read_done = True
 
     def __prev(self, event=None):
         if self._id > 0:
             self._id -= 1
-            self._img = decoders.open_image(str(self.image_list[self._id]))
-            self.__show()
+            self._read_done = False
+            threading.Thread(target=self.draw_spinner).start()
+            threading.Thread(target=self.__show).start()
 
     def __next(self, event=None):
         if self._id < len(self.image_list) - 1:
             self._id += 1
-            self._img = decoders.open_image(str(self.image_list[self._id]))
-            self.__show()
+            self._read_done = False
+            threading.Thread(target=self.draw_spinner).start()
+            threading.Thread(target=self.__show).start()
 
     def mouse_move(self, event):
         if self._controls_visible:
@@ -323,7 +356,7 @@ class ShowImage:
             scaled_img = self._img.convert(mode='RGBA')
             scaled_img.thumbnail((width, height), PIL.Image.BILINEAR)
             self._image = ImageTk.PhotoImage(scaled_img)
-            if self._img.tell() > len(self._frames):
+            if self._img.tell() >= len(self._frames):
                 self._frames.append(self._image)
             self._img_width = scaled_img.width
             self._img_height = scaled_img.height
@@ -366,3 +399,22 @@ class ShowImage:
             for button in self._buttons:
                 button.is_visible = True
                 button.redraw()
+
+    def draw_spinner(self):
+        if self._spinner_image is not None:
+            self._canvas.delete(self._spinner_image)
+        if not self._read_done:
+            self._spinner_image = self._canvas.create_image(
+                spinner_x_cords,
+                spinner_y_cords,
+                anchor=tkinter.NW,
+                image=spinner[self._spinner_frame]
+            )
+            self._canvas.update_idletasks()
+            self._spinner_frame += 1
+            if self._spinner_frame >= 30:
+                self._spinner_frame = 0
+            self._root.after(spinner_duration, self.draw_spinner)
+        else:
+            self._spinner_image = None
+            self._spinner_frame = 0
