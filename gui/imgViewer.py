@@ -176,11 +176,6 @@ class ShowImage:
         ]
         self._controls_visible = True
         self._animation_tick = None
-        self.__show()
-        self._root.attributes("-topmost", True)
-        self._root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        self._root.bind("<Configure>", self.resize)
-        self._root.bind("<Escape>", self.on_closing)
         if parent is not None:
             self._id = _id
             self.image_list = parent.get_image_files()
@@ -189,6 +184,11 @@ class ShowImage:
         else:
             self._id = None
             self.image_list = None
+        self.__show()
+        self._root.attributes("-topmost", True)
+        self._root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self._root.bind("<Configure>", self.resize)
+        self._root.bind("<Escape>", self.on_closing)
         self._root.focus()
         self._hide_cursor_timer = None
         self._cursor_visible = True
@@ -213,6 +213,7 @@ class ShowImage:
             self._root.after_cancel(self._animation_tick)
         self._frames = []
         self._read_done = False
+        self._frames_duration = []
         scaled_img = self._img.convert(mode='RGBA')
         scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
         self._root.geometry("{}x{}".format(width, height))
@@ -232,6 +233,9 @@ class ShowImage:
                 button.redraw()
         self._canvas.bind("<Motion>", self.mouse_move)
         self._canvas.bind("<Button-1>", self.on_click)
+        if self._img.format == 'WEBP' and self._img.is_animated:
+            self._frames_duration = \
+                decoders.webp.get_frames_duration(str(self.image_list[self._id]))
         if 'loop' in self._img.info and self._img.info['loop'] != 1:
             if isinstance(self._img.info['duration'], (list, tuple)):
                 self._animation_tick = self._root.after(
@@ -314,14 +318,12 @@ class ShowImage:
                 self._img.seek(self._img.tell() + 1)
             except EOFError:
                 self._img.seek(0)
-                if self._img.format != 'WEBP':
-                    print(self._img.info['duration'])
-                    self._read_done = True
+                self._read_done = True
                 self._current_frame = 0
             scaled_img = self._img.convert(mode='RGBA')
             scaled_img.thumbnail((width, height), PIL.Image.BILINEAR)
             self._image = ImageTk.PhotoImage(scaled_img)
-            if self._img.tell()<len(self._frames):
+            if self._img.tell() > len(self._frames):
                 self._frames.append(self._image)
             self._img_width = scaled_img.width
             self._img_height = scaled_img.height
@@ -332,23 +334,34 @@ class ShowImage:
             anchor=tkinter.NW,
             image=self._image
         )
-        if isinstance(self._img.info['duration'], (list, tuple)):
+        if self._img.format == 'WEBP' and self._read_done:
             self._animation_tick = self._root.after(
-                self._img.info['duration'][self._img.tell()],
+                self._frames_duration[self._current_frame],
                 self.__frame_update
             )
-        elif 'duration' in self._img.info and self._img.info['duration'] > 0:
+        elif self._read_done and isinstance(self._img.info['duration'], (list, tuple)):
             self._animation_tick = self._root.after(
-                self._img.info['duration'],
-                self.__frame_update
-            )
-        elif 'duration' in self._img.info:
-            self._animation_tick = self._root.after(
-                67,
+                self._img.info['duration'][self._current_frame],
                 self.__frame_update
             )
         else:
-            threading.Thread(target=self.__frame_update).start()
+            if isinstance(self._img.info['duration'], (list, tuple)):
+                self._animation_tick = self._root.after(
+                    self._img.info['duration'][self._img.tell()],
+                    self.__frame_update
+                )
+            elif 'duration' in self._img.info and self._img.info['duration'] > 0:
+                self._animation_tick = self._root.after(
+                    self._img.info['duration'],
+                    self.__frame_update
+                )
+            elif 'duration' in self._img.info:
+                self._animation_tick = self._root.after(
+                    67,
+                    self.__frame_update
+                )
+            else:
+                threading.Thread(target=self.__frame_update).start()
         if self._controls_visible:
             for button in self._buttons:
                 button.is_visible = True
