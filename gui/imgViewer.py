@@ -371,10 +371,16 @@ class ShowImage:
             image=self._image
         )
         if self._img.format == 'WEBP' and self._read_done:
-            self._animation_tick = self._root.after(
-                self._frames_duration[self._current_frame],
-                self.__frame_update
-            )
+            if self._frames_duration[self._current_frame]>0:
+                self._animation_tick = self._root.after(
+                    self._frames_duration[self._current_frame],
+                    self.__frame_update
+                )
+            else:
+                self._animation_tick = self._root.after(
+                    67,
+                    self.__frame_update
+                )
         elif self._read_done and isinstance(self._img.info['duration'], (list, tuple)):
             self._animation_tick = self._root.after(
                 self._img.info['duration'][self._current_frame],
