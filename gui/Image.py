@@ -12,6 +12,7 @@ import decoders
 
 img_icon = None
 
+thumbnail_size = (192, 144)
 
 def init():
     global img_icon
@@ -61,8 +62,10 @@ class Image(somefile.SomeFile):
             self._icon['image'] = self._thumbnail
             img.close()
         else:
-            img = decoders.open_image(str(self._path))
-            img.thumbnail((192, 144), PIL.Image.LANCZOS)
+            source_img = decoders.open_image(str(self._path), thumbnail_size)
+            img = source_img.convert(mode="RGBA")
+            source_img.close()
+            img.thumbnail(thumbnail_size, PIL.Image.LANCZOS)
             self._thumbnail = ImageTk.PhotoImage(img)
             self._icon['image'] = self._thumbnail
             img.save(os.path.join(".thumbnails", self._path.stem+'.webp'), quality=90)
