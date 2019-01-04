@@ -53,22 +53,34 @@ class JPEGDecoder(CustomDecoder.CustomDecoder):
                 else:
                     frame_len = struct.unpack('>H', self._file.read(2))[0]
                     self._file.seek(frame_len-2, 1)
-            self._file.close()
+            #self._file.close()
         return self._size
 
     def load_image(self):
+        self._file.seek(0, 0)
         data = self._file.read(1024)
         while len(data):
             self._process.stdin.write(data)
             data = self._file.read(1024)
         self._process.stdin.close()
 
-    def decode(self):
+    def decode(self, required_size=None):
+        commandline = ['djpeg']
+        if required_size is not None:
+            if self._size is None:
+                self.get_size()
+            commandline += ['-scale']
+            if (required_size[0]/self._size[1]*self._size[0]) <= required_size[1]:
+                commandline += ["{}/{}".format(required_size[0], self._size[1])]
+            else:
+                commandline += ["{}/{}".format(required_size[1], self._size[0])]
         self._process = subprocess.Popen(
-            ['djpeg'],
+            commandline,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE
         )
-        self._process.stdin.write(b'\xff\xd8')
         threading.Thread(target=self.load_image).start()
         return self._process
+
+    def __del__(self):
+        self._file.close()

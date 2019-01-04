@@ -240,7 +240,10 @@ class ShowImage:
         if self._animation_tick is not None:
             self._root.after_cancel(self._animation_tick)
         if img is None:
-            self._img = decoders.open_image(str(self.image_list[self._id]))
+            self._img = decoders.open_image(
+                str(self.image_list[self._id]),
+                (width, height)
+            )
         else:
             self._img = img
         self._frames = []
