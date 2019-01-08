@@ -7,7 +7,18 @@ svg_tag = re.compile(r'<svg[^>]*>')
 attributes = re.compile(r'[a-zA-Z\:]+\s?=\s?[\'\"][^\'\"]+[\'\"]')
 
 
-def getResolution(file_path):
+def is_svg(file_path):
+    file = open(file_path, 'r')
+    try:
+        data = file.read()
+    except UnicodeDecodeError:
+        file.close()
+        return False
+    file.close()
+    return svg_tag.search(data) is not None
+
+
+def get_resolution(file_path):
     file = open(file_path, 'r')
     data = file.read()
     file.close()
@@ -31,3 +42,7 @@ def getResolution(file_path):
         return (float(values[2]), float(values[3]))
     else:
         return None
+
+
+def decode(file_path, required_size=None):
+    pass
