@@ -22,11 +22,11 @@ class GUI:
     def __init__(self):
         self.root = tkinter.Tk()
         self._show_image_window = None
-        self.root.geometry("840x730")
+        self.root.geometry("840x525")
         filesystem.directory.init()
         Image.init()
         imgViewer.init()
-        self.thumbs_wrapper = ScrolledFrame.VerticalScrolledFrame(self.root, width=820, height=700)
+        self.thumbs_wrapper = ScrolledFrame.VerticalScrolledFrame(self.root, width=820, height=500)
         self.thumbs_wrapper.pack(side="top")
         self._items_list = []
         self._page = 0
