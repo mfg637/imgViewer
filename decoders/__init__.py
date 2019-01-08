@@ -11,4 +11,6 @@ def open_image(file_path, required_size=None):
         decoded_jpg = decoder.decode(required_size)
         img = PIL.Image.open(decoded_jpg.stdout)
         return img
+    elif svg.is_svg(file_path):
+        return svg.decode(file_path, required_size)
     return PIL.Image.open(file_path)

@@ -4,7 +4,7 @@
 from pathlib import Path
 from . import directory
 
-image_file_extensions = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.webm'}
+image_file_extensions = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.webm', '.svg'}
 
 
 def get_image_files(directory_path):

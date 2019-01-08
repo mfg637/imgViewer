@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import re
+import io
+import PIL.Image
+import cairosvg
 
 svg_tag = re.compile(r'<svg[^>]*>')
 attributes = re.compile(r'[a-zA-Z\:]+\s?=\s?[\'\"][^\'\"]+[\'\"]')
@@ -45,4 +48,12 @@ def get_resolution(file_path):
 
 
 def decode(file_path, required_size=None):
-    pass
+    scale = 1
+    if required_size is not None:
+        width, height = get_resolution(file_path)
+        if (required_size[0] / width * height) <= required_size[1]:
+            scale = required_size[0] / width
+        else:
+            scale = required_size[1] / height
+    buffer = io.BytesIO(cairosvg.svg2png(url=file_path, scale=scale))
+    return PIL.Image.open(buffer)
