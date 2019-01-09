@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import PIL.Image
-from . import jpeg, ffmpeg_webm_video, webp, svg
+from . import jpeg, ffmpeg_webm_video, webp, svg, apng
 
 
 def open_image(file_path, required_size=None):
@@ -11,6 +11,8 @@ def open_image(file_path, required_size=None):
         decoded_jpg = decoder.decode(required_size)
         img = PIL.Image.open(decoded_jpg.stdout)
         return img
+    #elif apng.is_png(file_path):
+    #    return apng.APNG(file_path)
     elif svg.is_svg(file_path):
         return svg.decode(file_path, required_size)
     return PIL.Image.open(file_path)
