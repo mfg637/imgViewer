@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import subprocess
 import tkinter
 import PIL.Image
 from PIL import ImageTk
@@ -200,6 +200,7 @@ class ShowImage:
         ]
         self._controls_visible = True
         self._animation_tick = None
+        self._parent = parent
         if parent is not None:
             self._id = _id
             self.image_list = parent.get_image_files()
@@ -222,6 +223,8 @@ class ShowImage:
 
 
     def on_closing(self, event=None):
+        if self._parent is not None and self._id is not None:
+            self._parent.open_page_by_id(self._id)
         self._img.close()
         self._root.destroy()
 
@@ -246,6 +249,9 @@ class ShowImage:
             )
         else:
             self._img = img
+        if 'duration_of_video' in self._img.info and self._img.info['duration_of_video'] >30:
+            subprocess.Popen(['mpv', self._img.filename])
+            self.on_closing()
         self._frames = []
         self._frames_duration = []
         scaled_img = self._img.convert(mode='RGBA')

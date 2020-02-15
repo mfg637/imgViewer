@@ -53,6 +53,7 @@ class GUI:
         bottom_panel.pack(side="top")
         self._img_offset = None
         self._image_list = []
+        self._dir_count = 0
 
     def show_image(self, img):
         if type(img) is int:
@@ -84,6 +85,7 @@ class GUI:
         self._page = 0
         self._items_list.append(filesystem.directory.ParentDirectory(self))
         directory_list, file_paths_list = filesystem.browse_current_folder()
+        self._dir_count = len(directory_list) + 1
         for directory in directory_list:
             self._items_list.append(filesystem.directory.Directory(self, directory))
         i = 0
@@ -116,3 +118,7 @@ class GUI:
 
     def get_image_files(self):
         return self._image_list
+
+    def open_page_by_id(self, id):
+        self._page = (id+self._dir_count)//items_per_page
+        self.__page_rendering()
