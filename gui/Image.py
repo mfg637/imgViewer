@@ -53,20 +53,20 @@ class Image(somefile.SomeFile):
 
     def show_thumbnail(self):
         exist = True
-        if not os.path.isdir('.thumbnails'):
-            exist = False
-            os.mkdir('.thumbnails')
-        if exist and os.path.exists(os.path.join(".thumbnails", self._path.stem+'.webp')):
-            img = decoders.open_image(os.path.join(".thumbnails", self._path.stem+'.webp'))
-            self._thumbnail = ImageTk.PhotoImage(img)
-            self._icon['image'] = self._thumbnail
-            img.close()
-        else:
-            source_img = decoders.open_image(str(self._path), thumbnail_size)
-            img = source_img.convert(mode="RGBA")
-            source_img.close()
-            img.thumbnail(thumbnail_size, PIL.Image.LANCZOS)
-            self._thumbnail = ImageTk.PhotoImage(img)
-            self._icon['image'] = self._thumbnail
-            img.save(os.path.join(".thumbnails", self._path.stem+'.webp'), quality=90)
-            img.close()
+        #if not os.path.isdir('.thumbnails'):
+        #    exist = False
+        #    os.mkdir('.thumbnails')
+        #if exist and os.path.exists(os.path.join(".thumbnails", self._path.stem+'.webp')):
+        #    img = decoders.open_image(os.path.join(".thumbnails", self._path.stem+'.webp'))
+        #    self._thumbnail = ImageTk.PhotoImage(img)
+        #    self._icon['image'] = self._thumbnail
+        #    img.close()
+        #else:
+        source_img = decoders.open_image(str(self._path), thumbnail_size)
+        img = source_img.convert(mode="RGBA")
+        source_img.close()
+        img.thumbnail(thumbnail_size, PIL.Image.LANCZOS)
+        self._thumbnail = ImageTk.PhotoImage(img)
+        self._icon['image'] = self._thumbnail
+        #    img.save(os.path.join(".thumbnails", self._path.stem+'.webp'), quality=90)
+        img.close()
