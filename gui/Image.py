@@ -34,19 +34,7 @@ class Image(somefile.SomeFile):
         self._thumbnail = None
 
     def create_widget(self, root, *pargs, **kwargs):
-        self._wrapper = tkinter.Frame(root, *pargs, **kwargs)
-        self._icon = tkinter.Label(self._wrapper, image=img_icon)
-        self._icon.pack(side="top")
-        self._file_name_label = tkinter.Label(
-            self._wrapper,
-            text=self._path.stem,
-            width=25,
-            wraplength=192
-        )
-        self._file_name_label.pack(side="top")
-        self._wrapper.bind("<Double-Button-1>", self.show_image)
-        self._icon.bind("<Double-Button-1>", self.show_image)
-        self._file_name_label.bind("<Double-Button-1>", self.show_image)
+        self._create_widget(root, img_icon=img_icon, name=self._path.stem, bind=self.show_image, *pargs, **kwargs)
 
     def show_image(self, event):
         self._parent.show_image(self._id)

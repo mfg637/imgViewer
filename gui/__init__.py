@@ -4,6 +4,7 @@
 import tkinter
 import tkinter.ttk
 from tkinter import messagebox
+import tkinter.simpledialog
 from . import ScrolledFrame
 import os
 import filesystem
@@ -12,6 +13,7 @@ import re
 from math import ceil
 import threading
 from . import imgViewer
+from pathlib import Path
 
 unsigned_number_validate = re.compile(r"^\s*\d+\s*$")
 items_per_page = 52
@@ -81,11 +83,13 @@ class GUI:
     def open_dir(self, directory_path):
         os.chdir(directory_path)
         self.root.title(os.getcwd())
-        self._items_list = []
+        self._items_list = [
+            filesystem.directory.ParentDirectory(self),
+            filesystem.directory.MatchFilesPattern(self)
+        ]
         self._page = 0
-        self._items_list.append(filesystem.directory.ParentDirectory(self))
         directory_list, file_paths_list = filesystem.browse_current_folder()
-        self._dir_count = len(directory_list) + 1
+        self._dir_count = len(directory_list) + 2
         for directory in directory_list:
             self._items_list.append(filesystem.directory.Directory(self, directory))
         i = 0
@@ -93,6 +97,30 @@ class GUI:
         for image_path in file_paths_list:
             self._items_list.append(Image.Image(image_path, self, i))
             self._image_list.append(image_path)
+            i += 1
+        self._page_count_label['text'] = str(ceil((len(self._items_list)-1)/items_per_page))
+        self.__page_rendering()
+
+    def _extract_mtime_key(self, file:Path):
+        return file.stat().st_mtime
+
+    def browse_all_files(self):
+        pattern = tkinter.simpledialog.askstring("search pattern", "file match pattern:")
+        if len(pattern) == 0:
+            return
+        self.root.title(os.getcwd()+'*')
+        self._items_list = [filesystem.directory.Directory(self, Path('.'))]
+        self._page = 0
+        self._dir_count = 1
+        self._image_list = []
+        for file in Path('.').glob(pattern):
+            if file.is_file() and file.suffix in filesystem.image_file_extensions:
+                self._image_list.append(file)
+        self._image_list.sort(key=self._extract_mtime_key, reverse=True)
+        i = 0
+        for image in self._image_list:
+            self._items_list.append(Image.Image(image, self, i))
+            #self._image_list.append(image)
             i += 1
         self._page_count_label['text'] = str(ceil((len(self._items_list)-1)/items_per_page))
         self.__page_rendering()
