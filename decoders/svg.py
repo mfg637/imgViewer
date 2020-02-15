@@ -51,12 +51,15 @@ def get_resolution(file_path):
 
 def decode(file_path, required_size=None):
     scale = 1
-    if required_size is not None:
-        width, height = get_resolution(file_path)
-        if (required_size[0] / width * height) <= required_size[1]:
-            scale = required_size[0] / width
-        else:
-            scale = required_size[1] / height
+    try:
+        if required_size is not None:
+            width, height = get_resolution(file_path)
+            if (required_size[0] / width * height) <= required_size[1]:
+                scale = required_size[0] / width
+            else:
+                scale = required_size[1] / height
+    except ValueError:
+        pass
     buffer = None
     import defusedxml
     try:
