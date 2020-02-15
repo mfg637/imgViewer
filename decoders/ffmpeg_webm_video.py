@@ -5,7 +5,7 @@ import io
 
 
 def _accept(prefix):
-    return prefix[:5] == b"\x1a\x45\xdf\xa3\x01"
+    return prefix[:4] == b"\x1a\x45\xdf\xa3"
 
 
 class WebM_Video(ImageFile.ImageFile):
@@ -95,6 +95,7 @@ class WebM_Video(ImageFile.ImageFile):
                     #print(self.loaded_frames)
                 else:
                     self.process.terminate()
+                    self.process.stdout.close()
                     raise EOFError
 
         self.tile = [
