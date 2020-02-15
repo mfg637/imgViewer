@@ -154,7 +154,7 @@ class ShowImage:
         self._read_done = False
         self._canvas = tkinter.Canvas(self._root, background="black", highlightthickness=0)
         self._canvas.pack()
-        self._canvas.bind("<Double-Button-1>", self.on_closing)
+        self._canvas.bind("<Double-Button-1>", self.mouse_double_click)
         self._spinner_frame = -1
         self._spinner_image = None
         self._img = img
@@ -221,6 +221,14 @@ class ShowImage:
         threading.Thread(target=self.draw_spinner).start()
         threading.Thread(target=self.__show, args=(img,)).start()
 
+    def mouse_double_click(self):
+        has_active_button = False
+        for button in self._buttons:
+            active = button.click_event()
+            if active:
+                has_active_button = True
+        if not has_active_button:
+            self.on_closing()
 
     def on_closing(self, event=None):
         if self._parent is not None and self._id is not None:
