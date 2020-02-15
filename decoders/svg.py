@@ -3,6 +3,8 @@
 
 import re
 import io
+import subprocess
+
 import PIL.Image
 import cairosvg
 
@@ -55,5 +57,13 @@ def decode(file_path, required_size=None):
             scale = required_size[0] / width
         else:
             scale = required_size[1] / height
-    buffer = io.BytesIO(cairosvg.svg2png(url=file_path, scale=scale))
+    buffer = None
+    import defusedxml
+    try:
+        buffer = io.BytesIO(cairosvg.svg2png(url=file_path, scale=scale))
+    except defusedxml.common.EntitiesForbidden:
+        buffer = io.BytesIO(subprocess.run(
+            ['rsvg-convert', '--format=png', '-z', str(scale), file_path],
+            capture_output=True
+        ).stdout)
     return PIL.Image.open(buffer)
