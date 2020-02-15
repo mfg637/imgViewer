@@ -155,7 +155,7 @@ class ShowImage:
         self._canvas = tkinter.Canvas(self._root, background="black", highlightthickness=0)
         self._canvas.pack()
         self._canvas.bind("<Double-Button-1>", self.on_closing)
-        self._spinner_frame = 0
+        self._spinner_frame = -1
         self._spinner_image = None
         self._img = img
         self._image = None
@@ -357,7 +357,7 @@ class ShowImage:
                 self._read_done = True
                 self._current_frame = 0
             scaled_img = self._img.convert(mode='RGBA')
-            scaled_img.thumbnail((width, height), PIL.Image.BILINEAR)
+            scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
             self._image = ImageTk.PhotoImage(scaled_img)
             if self._img.tell() >= len(self._frames):
                 self._frames.append(self._image)
@@ -408,11 +408,18 @@ class ShowImage:
             for button in self._buttons:
                 button.is_visible = True
                 button.redraw()
+        self.draw_spinner(nextFrame=False)
 
-    def draw_spinner(self):
+    def draw_spinner(self, nextFrame=True):
+        if self._spinner_frame < 0 and not nextFrame:
+            return
         if self._spinner_image is not None:
             self._canvas.delete(self._spinner_image)
         if not self._read_done:
+            if nextFrame:
+                self._spinner_frame += 1
+                if self._spinner_frame >= 30:
+                    self._spinner_frame = 0
             self._spinner_image = self._canvas.create_image(
                 spinner_x_cords,
                 spinner_y_cords,
@@ -420,10 +427,8 @@ class ShowImage:
                 image=spinner[self._spinner_frame]
             )
             self._canvas.update_idletasks()
-            self._spinner_frame += 1
-            if self._spinner_frame >= 30:
-                self._spinner_frame = 0
-            self._root.after(spinner_duration, self.draw_spinner)
+            if nextFrame:
+                self._root.after(spinner_duration, self.draw_spinner)
         else:
             self._spinner_image = None
             self._spinner_frame = 0
