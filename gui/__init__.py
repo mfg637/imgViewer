@@ -73,10 +73,18 @@ class GUI:
             widget.destroy()
         self.page_count_field.delete(0, tkinter.END)
         self.page_count_field.insert(0, str(self._page+1))
-        for i in range(min(len(self._items_list)-self._page*items_per_page, items_per_page)):
-            current_item = self._items_list[self._page*items_per_page+i]
+        start = self._page * items_per_page
+        _items_per_page = min(len(self._items_list) - start, items_per_page)
+        _n = min(n, _items_per_page)
+        for i in range(_items_per_page):
+            current_item = self._items_list[start+i]
             current_item.create_widget(self.thumbs_wrapper.interior)
             current_item.grid(row=i//n, column=i % n, sticky=tkinter.N)
+            current_item.update()
+        if _n == 1:
+            current_item = self._items_list[0]
+            current_item.create_widget(self.thumbs_wrapper.interior)
+            current_item.grid(row=0, column=1, sticky=tkinter.N)
             current_item.update()
         threading.Thread(target=self.__show_thumbnails).start()
 
@@ -98,8 +106,11 @@ class GUI:
             self._items_list.append(Image.Image(image_path, self, i))
             self._image_list.append(image_path)
             i += 1
-        self._page_count_label['text'] = str(ceil((len(self._items_list)-1)/items_per_page))
+        self._page_count()
         self.__page_rendering()
+
+    def _page_count(self):
+        self._page_count_label['text'] = str(ceil((len(self._items_list)) / items_per_page))
 
     def _extract_mtime_key(self, file:Path):
         return file.stat().st_mtime
@@ -122,7 +133,7 @@ class GUI:
             self._items_list.append(Image.Image(image, self, i))
             #self._image_list.append(image)
             i += 1
-        self._page_count_label['text'] = str(ceil((len(self._items_list)-1)/items_per_page))
+        self._page_count()
         self.__page_rendering()
 
     def next(self):
@@ -150,3 +161,11 @@ class GUI:
     def open_page_by_id(self, id):
         self._page = (id+self._dir_count)//items_per_page
         self.__page_rendering()
+
+    def remove_file(self, id):
+        self._items_list.pop(id+self._dir_count)
+        i=0
+        for j in range(self._dir_count, len(self._items_list)):
+            self._items_list[j].id = i
+            i += 1
+        self._page_count()

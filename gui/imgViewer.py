@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import pathlib
 import subprocess
 import tkinter
 import PIL.Image
@@ -18,6 +19,8 @@ left_arrow_active_img = None
 right_arrow_active_img = None
 close_btn_default = None
 close_btn_active = None
+trash_btn_default = None
+trash_btn_active = None
 spinner = []
 spinner_duration = 0
 spinner_x_cords = None
@@ -33,6 +36,8 @@ def init():
     global close_btn_active
     global spinner
     global spinner_duration
+    global trash_btn_default
+    global trash_btn_active
     img = PIL.Image.open(os.path.join(
         os.path.dirname(sys.argv[0]),
         "images",
@@ -62,6 +67,20 @@ def init():
         "close_btn_active.png"
     ))
     close_btn_active = ImageTk.PhotoImage(img)
+    img.close()
+    img = PIL.Image.open(os.path.join(
+        os.path.dirname(sys.argv[0]),
+        "images",
+        "trash_btn_default.png"
+    ))
+    trash_btn_default = ImageTk.PhotoImage(img)
+    img.close()
+    img = PIL.Image.open(os.path.join(
+        os.path.dirname(sys.argv[0]),
+        "images",
+        "trash_btn_active.png"
+    ))
+    trash_btn_active = ImageTk.PhotoImage(img)
     img.close()
     img = PIL.Image.open(os.path.join(
         os.path.dirname(sys.argv[0]),
@@ -141,6 +160,8 @@ class ButtonImage:
 
 class ShowImage:
     def __init__(self, root, img=None, parent=None, _id=None):
+        self.image_list=None
+        self._id=None
         global spinner_x_cords
         global spinner_y_cords
         global width
@@ -196,6 +217,17 @@ class ShowImage:
                 lambda x, y: (self._root.winfo_screenwidth() - 32) <= x <= self._root.winfo_screenwidth() and \
                              0 <= y < 32,
                 self.on_closing
+            ),
+            ButtonImage(
+                self._root,
+                self._canvas,
+                trash_btn_default,
+                trash_btn_active,
+                lambda: self._root.winfo_screenwidth() - 32,
+                lambda: self._root.winfo_screenheight() - 32,
+                lambda x, y: (self._root.winfo_screenwidth() - 32) <= x <= self._root.winfo_screenwidth() and \
+                             (self._root.winfo_screenheight() - 32) <= y < self._root.winfo_screenheight(),
+                self.delete
             )
         ]
         self._controls_visible = True
@@ -206,10 +238,6 @@ class ShowImage:
             self.image_list = parent.get_image_files()
             self._root.bind("<Left>", self.__prev)
             self._root.bind("<Right>", self.__next)
-        else:
-            self._id = None
-            self.image_list = None
-        #self.__show(img)
         self._root.attributes("-topmost", True)
         self._root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self._root.bind("<Escape>", self.on_closing)
@@ -304,16 +332,12 @@ class ShowImage:
     def __prev(self, event=None):
         if self._id > 0:
             self._id -= 1
-            self._read_done = False
-            threading.Thread(target=self.draw_spinner).start()
-            threading.Thread(target=self.__show).start()
+            self._show()
 
     def __next(self, event=None):
         if self._id < len(self.image_list) - 1:
             self._id += 1
-            self._read_done = False
-            threading.Thread(target=self.draw_spinner).start()
-            threading.Thread(target=self.__show).start()
+            self._show()
 
     def mouse_move(self, event):
         if self._controls_visible:
@@ -446,3 +470,17 @@ class ShowImage:
         else:
             self._spinner_image = None
             self._spinner_frame = 0
+
+    def _show(self):
+        self._read_done = False
+        threading.Thread(target=self.draw_spinner).start()
+        threading.Thread(target=self.__show).start()
+
+    def delete(self):
+        if self.image_list is not None:
+            self._parent.remove_file(self._id)
+            self.image_list[self._id].unlink()
+            self.image_list.pop(self._id)
+            if self._id==len(self.image_list):
+                self._id -= 1
+            self.__show()
