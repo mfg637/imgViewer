@@ -17,6 +17,7 @@ from pathlib import Path
 
 unsigned_number_validate = re.compile(r"^\s*\d+\s*$")
 items_per_page = 52
+THUMBNAIL_WIDTH=192
 n = 4
 
 
@@ -24,10 +25,12 @@ class GUI:
     def __init__(self):
         self.root = tkinter.Tk()
         self._show_image_window = None
-        self.root.geometry("840x525")
+        self.root.geometry("840x530")
         filesystem.directory.init()
         Image.init()
         imgViewer.init()
+        self._width = 840
+        self._height = 525
         self.thumbs_wrapper = ScrolledFrame.VerticalScrolledFrame(self.root, width=820, height=500)
         self.thumbs_wrapper.pack(side="top")
         self._items_list = []
@@ -56,6 +59,21 @@ class GUI:
         self._img_offset = None
         self._image_list = []
         self._dir_count = 0
+        self.root.bind("<Configure>", self._resize)
+        self._resize_timer = None
+
+    def _resize(self, event):
+        global n
+        if self.root.winfo_width() != self._width or self.root.winfo_height() != self._height:
+            try:
+                self.root.after_cancel(self._resize_timer)
+            except ValueError:
+                pass
+            self._width = self.root.winfo_width()
+            self._height = self.root.winfo_height()
+            self.thumbs_wrapper.resize(self._width - 20, self._height - 30)
+            n = (self._width - 70)//THUMBNAIL_WIDTH
+            self._resize_timer = self.root.after(500, self.__page_rendering)
 
     def show_image(self, img):
         if type(img) is int:

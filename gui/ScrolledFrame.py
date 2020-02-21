@@ -75,3 +75,9 @@ class VerticalScrolledFrame(Frame):
 		else:
 			self.canvas.unbind_all("<Button-4>")
 			self.canvas.unbind_all("<Button-5>")
+
+	def resize(self, width, height):
+		self["width"] = width
+		self["height"] = height
+		self.canvas["width"] = width
+		self.canvas["height"] = height
