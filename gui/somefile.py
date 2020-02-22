@@ -21,7 +21,7 @@ class SomeFile:
     def show_thumbnail(self):
         pass
 
-    def _create_widget(self, root, img_icon, name, bind, *pargs, **kwargs):
+    def _create_widget(self, root, img_icon, name, bind, right_click_bind = None, *pargs, **kwargs):
         self._wrapper = tkinter.Frame(root, *pargs, **kwargs)
         self._icon = tkinter.Label(self._wrapper, image=img_icon)
         self._icon.pack(side="top")
@@ -35,6 +35,10 @@ class SomeFile:
         self._wrapper.bind("<Double-Button-1>", bind)
         self._icon.bind("<Double-Button-1>", bind)
         self._file_name_label.bind("<Double-Button-1>", bind)
+        if right_click_bind is not None:
+            self._wrapper.bind("<Button-3>", right_click_bind)
+            self._icon.bind("<Button-3>", right_click_bind)
+            self._file_name_label.bind("<Button-3>", right_click_bind)
 
     @abc.abstractmethod
     def create_widget(self, root, *pargs, **kwargs):
