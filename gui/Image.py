@@ -11,6 +11,7 @@ from gui import somefile
 import decoders
 import tkinter.messagebox
 import tkinter.filedialog
+import cache
 img_icon = None
 
 thumbnail_size = (192, 144)
@@ -28,6 +29,7 @@ def init():
 class Image(somefile.SomeFile):
     def __init__(self, path, parent, id):
         self._path = path
+        self._abs_path = self._path.resolve()
         self.id = id
         self._parent = parent
         self._wrapper = None
@@ -74,21 +76,7 @@ class Image(somefile.SomeFile):
         self.file_popup_menu.post(event.x_root, event.y_root)
 
     def show_thumbnail(self):
-        exist = True
-        #if not os.path.isdir('.thumbnails'):
-        #    exist = False
-        #    os.mkdir('.thumbnails')
-        #if exist and os.path.exists(os.path.join(".thumbnails", self._path.stem+'.webp')):
-        #    img = decoders.open_image(os.path.join(".thumbnails", self._path.stem+'.webp'))
-        #    self._thumbnail = ImageTk.PhotoImage(img)
-        #    self._icon['image'] = self._thumbnail
-        #    img.close()
-        #else:
-        source_img = decoders.open_image(str(self._path), thumbnail_size)
-        img = source_img.convert(mode="RGBA")
-        source_img.close()
-        img.thumbnail(thumbnail_size, PIL.Image.LANCZOS)
+        img = cache.manager.load_thumbnail(self._abs_path)
         self._thumbnail = ImageTk.PhotoImage(img)
         self._icon['image'] = self._thumbnail
-        #    img.save(os.path.join(".thumbnails", self._path.stem+'.webp'), quality=90)
         img.close()
