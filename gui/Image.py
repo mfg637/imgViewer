@@ -9,10 +9,11 @@ import sys
 from pathlib import Path
 from gui import somefile
 import decoders
-
+import tkinter.messagebox
 img_icon = None
 
 thumbnail_size = (192, 144)
+
 
 def init():
     global img_icon
@@ -32,12 +33,34 @@ class Image(somefile.SomeFile):
         self._icon = None
         self._file_name_label = None
         self._thumbnail = None
+        self.file_popup_menu = tkinter.Menu(self._parent.root, tearoff=0)
+        self.file_popup_menu.add_command(label="hide menu")
+        self.file_popup_menu.add_command(label="Delete file", command=self.__remove_file)
+
+    def __remove_file(self):
+        answer = tkinter.messagebox.askokcancel(
+            "File deleting",
+            "Are you sure what you want delete file \"{}\"".format(str(self._path))
+        )
+        if answer:
+            self._parent.remove_file(self.id)
+            self._parent.page_rendering()
+
 
     def create_widget(self, root, *pargs, **kwargs):
-        self._create_widget(root, img_icon=img_icon, name=self._path.stem, bind=self.show_image, *pargs, **kwargs)
+        self._create_widget(
+            root,
+            img_icon=img_icon,
+            name=self._path.stem,
+            bind=self.show_image,
+            right_click_bind=self.show_popup_menu,
+            *pargs, **kwargs)
 
     def show_image(self, event):
         self._parent.show_image(self.id)
+
+    def show_popup_menu(self, event):
+        self.file_popup_menu.post(event.x_root, event.y_root)
 
     def show_thumbnail(self):
         exist = True

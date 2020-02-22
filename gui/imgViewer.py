@@ -479,8 +479,6 @@ class ShowImage:
     def delete(self):
         if self.image_list is not None:
             self._parent.remove_file(self._id)
-            self.image_list[self._id].unlink()
-            self.image_list.pop(self._id)
             if self._id==len(self.image_list):
                 self._id -= 1
             self.__show()

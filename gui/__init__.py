@@ -83,7 +83,7 @@ class GUI:
                 height=self._height - THUMBS_WRAPPER_VERTICAL_MARGIN
             )
             items_per_table_row = (self._width - THUMBS_GRID_PADDING) // THUMBNAIL_WIDTH
-            self._resize_timer = self.root.after(500, self.__page_rendering)
+            self._resize_timer = self.root.after(500, self.page_rendering)
 
     def show_image(self, img):
         if type(img) is int:
@@ -95,7 +95,7 @@ class GUI:
         for i in range(min(len(self._items_list)-self._page*items_per_page, items_per_page)):
             self._items_list[self._page*items_per_page+i].show_thumbnail()
 
-    def __page_rendering(self):
+    def page_rendering(self):
         self.thumbs_wrapper.to_start()
         for widget in self.thumbs_wrapper.interior.winfo_children():
             widget.destroy()
@@ -134,13 +134,13 @@ class GUI:
             self._image_list.append(image_path)
             i += 1
         self._page_count()
-        self.__page_rendering()
+        self.page_rendering()
 
     def _page_count(self):
         self._page_count_label['text'] = str(ceil((len(self._items_list)) / items_per_page))
 
     @staticmethod
-    def _extract_mtime_key(file:Path):
+    def _extract_mtime_key(file: Path):
         return file.stat().st_mtime
 
     def browse_all_files(self):
@@ -161,24 +161,24 @@ class GUI:
             self._items_list.append(Image.Image(image, self, i))
             i += 1
         self._page_count()
-        self.__page_rendering()
+        self.page_rendering()
 
     def next(self):
         if (self._page+1)*items_per_page < len(self._items_list):
             self._page += 1
-            self.__page_rendering()
+            self.page_rendering()
 
     def prev(self):
         if self._page > 0:
             self._page -= 1
-            self.__page_rendering()
+            self.page_rendering()
 
     def __goto(self, event=None):
         if unsigned_number_validate.search(self.page_count_field.get()) is not None:
             page = int(re.search(r"\d+", self.page_count_field.get()).group(0))
             if page != self._page-1:
                 self._page = page-1
-                self.__page_rendering()
+                self.page_rendering()
         else:
             tkinter.messagebox.showerror('Browser', "invalid page number")
 
@@ -187,7 +187,12 @@ class GUI:
 
     def open_page_by_id(self, image_id):
         self._page = (image_id + self._dir_count) // items_per_page
-        self.__page_rendering()
+        self.page_rendering()
+
+    def __remove_file(self, event):
+        image_id = event.widget.id
+        self.remove_file(image_id)
+        self.page_rendering()
 
     def remove_file(self, image_id):
         self._items_list.pop(image_id + self._dir_count)
@@ -196,3 +201,5 @@ class GUI:
             self._items_list[j].id = i
             i += 1
         self._page_count()
+        self._image_list[image_id].unlink()
+        self._image_list.pop(image_id)
