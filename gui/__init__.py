@@ -21,6 +21,7 @@ THUMBNAIL_WIDTH = 192
 items_per_table_row = 4
 THUMBS_WRAPPER_HORIZONTAL_MARGIN = 20
 THUMBS_WRAPPER_VERTICAL_MARGIN = 30
+THUMBS_GRID_PADDING = 72
 
 
 class GUI:
@@ -81,7 +82,7 @@ class GUI:
                 width=self._width - THUMBS_WRAPPER_HORIZONTAL_MARGIN,
                 height=self._height - THUMBS_WRAPPER_VERTICAL_MARGIN
             )
-            items_per_table_row = (self._width - 70) // THUMBNAIL_WIDTH
+            items_per_table_row = (self._width - THUMBS_GRID_PADDING) // THUMBNAIL_WIDTH
             self._resize_timer = self.root.after(500, self.__page_rendering)
 
     def show_image(self, img):
