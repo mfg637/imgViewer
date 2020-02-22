@@ -47,6 +47,12 @@ class JPEGDecoder(CustomDecoder.CustomDecoder):
         if self._size is None:
             while self._size is None:
                 marker = self._file.read(2)
+                # fix marker reading position
+                if marker[0] != 255 and marker[1] == 255:
+                    self._file.seek(-1, 1)
+                    marker = self._file.read(2)
+                if marker == b'\xff\x00':
+                    raise ValueError("jpeg marker not found")
                 if marker in START_OF_FRAME_MARKERS:
                     self._file.seek(3, 1)
                     self._size = struct.unpack('>HH', self._file.read(4))
