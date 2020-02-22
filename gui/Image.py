@@ -10,6 +10,7 @@ from pathlib import Path
 from gui import somefile
 import decoders
 import tkinter.messagebox
+import tkinter.filedialog
 img_icon = None
 
 thumbnail_size = (192, 144)
@@ -36,6 +37,7 @@ class Image(somefile.SomeFile):
         self.file_popup_menu = tkinter.Menu(self._parent.root, tearoff=0)
         self.file_popup_menu.add_command(label="hide menu")
         self.file_popup_menu.add_command(label="Delete file", command=self.__remove_file)
+        self.file_popup_menu.add_command(label="Move/Rename file", command=self.__move_file)
 
     def __remove_file(self):
         answer = tkinter.messagebox.askokcancel(
@@ -44,6 +46,15 @@ class Image(somefile.SomeFile):
         )
         if answer:
             self._parent.remove_file(self.id)
+            self._parent.page_rendering()
+
+    def __move_file(self):
+        filepath = tkinter.filedialog.asksaveasfilename(
+            initialdir=self._path.parent.resolve(),
+            initialfile=self._path.stem
+        )
+        if len(filepath)>0:
+            self._parent.move_file(self.id, filepath+self._path.suffix)
             self._parent.page_rendering()
 
 

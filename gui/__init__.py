@@ -17,7 +17,7 @@ from pathlib import Path
 
 unsigned_number_validate = re.compile(r"^\s*\d+\s*$")
 items_per_page = 52
-THUMBNAIL_WIDTH = 192
+THUMBNAIL_WIDTH = Image.thumbnail_size[0]
 items_per_table_row = 4
 THUMBS_WRAPPER_HORIZONTAL_MARGIN = 20
 THUMBS_WRAPPER_VERTICAL_MARGIN = 30
@@ -189,17 +189,20 @@ class GUI:
         self._page = (image_id + self._dir_count) // items_per_page
         self.page_rendering()
 
-    def __remove_file(self, event):
-        image_id = event.widget.id
-        self.remove_file(image_id)
-        self.page_rendering()
-
-    def remove_file(self, image_id):
+    def __items_list_pop_file(self, image_id):
         self._items_list.pop(image_id + self._dir_count)
         i = 0
         for j in range(self._dir_count, len(self._items_list)):
             self._items_list[j].id = i
             i += 1
         self._page_count()
+
+    def remove_file(self, image_id):
+        self.__items_list_pop_file(image_id)
         self._image_list[image_id].unlink()
+        self._image_list.pop(image_id)
+
+    def move_file(self, image_id, path):
+        self.__items_list_pop_file(image_id)
+        self._image_list[image_id].rename(path)
         self._image_list.pop(image_id)
