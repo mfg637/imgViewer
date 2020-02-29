@@ -18,3 +18,4 @@ class WebM_Video(ffmpeg_video.Video):
 Image.register_open(WebM_Video.format, WebM_Video, _accept)
 
 Image.register_extension(WebM_Video.format, ".webm")
+Image.register_extension(WebM_Video.format, ".mkv")

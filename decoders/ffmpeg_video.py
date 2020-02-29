@@ -55,7 +55,7 @@ class Video(ImageFile.ImageFile, metaclass=abc.ABCMeta):
         self._frame_size = size[0]*size[1]*3
         self.loaded_frames = 0
         self.info['duration_of_video'] = float(data['format']['duration'])
-        print(self.info)
+
         if 30 >= self.info['duration_of_video']:
             self._exclusive_fp = None
             self.info['loop'] = 0
@@ -67,6 +67,7 @@ class Video(ImageFile.ImageFile, metaclass=abc.ABCMeta):
             self.info['loop'] = 1
             self.raw_data_len = self._frame_size
             self.fp = io.BytesIO(self.process.stdout.read(self.raw_data_len))
+            self.process.stdout.close()
         self._n_frames = self.raw_data_len // self._frame_size
 
     @property
