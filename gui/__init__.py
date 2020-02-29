@@ -102,16 +102,16 @@ class GUI:
         self.page_count_field.delete(0, tkinter.END)
         self.page_count_field.insert(0, str(self._page+1))
         start = self._page * items_per_page
-        _items_per_page = min(len(self._items_list) - start, items_per_page)
-        for i in range(_items_per_page):
+        items_in_current_page = min(len(self._items_list) - start, items_per_page)
+        for i in range(items_in_current_page):
             current_item = self._items_list[start+i]
             current_item.create_widget(self.thumbs_wrapper.interior)
             current_item.grid(row=i // items_per_table_row, column=i % items_per_table_row, sticky=tkinter.N)
             current_item.update()
-        if items_per_page == 1:
+        if items_in_current_page < 5:
             current_item = self._items_list[0]
             current_item.create_widget(self.thumbs_wrapper.interior)
-            current_item.grid(row=0, column=1, sticky=tkinter.N)
+            current_item.grid(row=1, column=0, sticky=tkinter.N)
             current_item.update()
         threading.Thread(target=self.__show_thumbnails).start()
 
