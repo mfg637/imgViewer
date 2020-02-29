@@ -115,6 +115,17 @@ class GUI:
             current_item.update()
         threading.Thread(target=self.__show_thumbnails).start()
 
+    @staticmethod
+    def _extract_mtime_key(file: Path):
+        return file.stat().st_mtime
+
+    @staticmethod
+    def _extract_name(file: Path):
+        if re.match(r"^\d+$", file.stem):
+            return file.stem.rjust(255,'0')
+        else:
+            return file.name
+
     def open_dir(self, directory_path):
         os.chdir(directory_path)
         self.root.title(os.getcwd())
@@ -124,6 +135,8 @@ class GUI:
         ]
         self._page = 0
         directory_list, file_paths_list = filesystem.browse_current_folder()
+        directory_list.sort(key=self._extract_name, reverse=True)
+        file_paths_list.sort(key=self._extract_mtime_key, reverse=True)
         self._dir_count = len(directory_list) + 2
         for directory in directory_list:
             self._items_list.append(filesystem.directory.Directory(self, directory))
@@ -138,10 +151,6 @@ class GUI:
 
     def _page_count(self):
         self._page_count_label['text'] = str(ceil((len(self._items_list)) / items_per_page))
-
-    @staticmethod
-    def _extract_mtime_key(file: Path):
-        return file.stat().st_mtime
 
     def browse_all_files(self):
         pattern = tkinter.simpledialog.askstring("search pattern", "file match pattern:")
