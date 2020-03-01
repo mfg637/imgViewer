@@ -27,7 +27,13 @@ class Video(ImageFile.ImageFile, metaclass=abc.ABCMeta):
         for stream in data['streams']:
             if stream['codec_type'] == "video":
                 video = stream
-        fps = eval(video['avg_frame_rate'])
+        print(video)
+        print('avg_frame_rate', video['avg_frame_rate'])
+        fps=None
+        if video['avg_frame_rate'] == "0/0":
+            fps = eval(video['r_frame_rate'])
+        else:
+            fps = eval(video['avg_frame_rate'])
         self.info['duration'] = int(round(1 / fps * 1000))
         self._size = (video["width"], video["height"])
         self.mode = "RGB"
