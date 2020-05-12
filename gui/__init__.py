@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import math
+
 import tkinter
 import tkinter.ttk
 from tkinter import messagebox
@@ -105,7 +105,7 @@ class GUI:
             )
             items_calculator.items_per_row((self._width - THUMBS_GRID_PADDING) // THUMBNAIL_WIDTH)
             items_calculator.rows_per_screen(
-                math.ceil((self._height - THUMBS_WRAPPER_VERTICAL_MARGIN) / ITEM_HEIGHT)
+                ceil((self._height - THUMBS_WRAPPER_VERTICAL_MARGIN) / ITEM_HEIGHT)
             )
             self._resize_timer = self.root.after(500, self.page_rendering)
 
@@ -135,7 +135,7 @@ class GUI:
             current_item.create_widget(self.thumbs_wrapper.interior)
             current_item.grid(row=i // items_per_table_row, column=i % items_per_table_row, sticky=tkinter.N)
             current_item.update()
-        if items_in_current_page < 5:
+        if items_in_current_page < (items_calculator.items_per_row() + 1):
             current_item = self._items_list[0]
             current_item.create_widget(self.thumbs_wrapper.interior)
             current_item.grid(row=1, column=0, sticky=tkinter.N)
