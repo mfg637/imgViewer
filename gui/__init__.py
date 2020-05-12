@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import math
 import tkinter
 import tkinter.ttk
 from tkinter import messagebox
@@ -16,9 +16,31 @@ from . import imgViewer
 from pathlib import Path
 
 unsigned_number_validate = re.compile(r"^\s*\d+\s*$")
-items_per_page = 52
 THUMBNAIL_WIDTH = Image.thumbnail_size[0]
-items_per_table_row = 4
+ITEM_HEIGHT = Image.thumbnail_size[1] + 24
+
+
+class ItemsCalculator:
+    def __init__(self, items_per_row, rows_per_screen):
+        self._items_per_row = items_per_row
+        self._rows_per_screen = rows_per_screen
+
+    def items_per_row(self, value=None):
+        if value is not None:
+            self._items_per_row = value
+        return self._items_per_row
+
+    def rows_per_screen(self, value=None):
+        if value is not None:
+            self._rows_per_screen = value
+        return  self._rows_per_screen
+
+    def items_per_page(self):
+        return self._items_per_row * self._rows_per_screen
+
+
+items_calculator = ItemsCalculator(4, 3)
+
 THUMBS_WRAPPER_HORIZONTAL_MARGIN = 20
 THUMBS_WRAPPER_VERTICAL_MARGIN = 30
 THUMBS_GRID_PADDING = 72
@@ -70,7 +92,6 @@ class GUI:
         self._resize_timer = None
 
     def _resize(self, event):
-        global items_per_table_row
         if self.root.winfo_width() != self._width or self.root.winfo_height() != self._height:
             try:
                 self.root.after_cancel(self._resize_timer)
@@ -82,7 +103,10 @@ class GUI:
                 width=self._width - THUMBS_WRAPPER_HORIZONTAL_MARGIN,
                 height=self._height - THUMBS_WRAPPER_VERTICAL_MARGIN
             )
-            items_per_table_row = (self._width - THUMBS_GRID_PADDING) // THUMBNAIL_WIDTH
+            items_calculator.items_per_row((self._width - THUMBS_GRID_PADDING) // THUMBNAIL_WIDTH)
+            items_calculator.rows_per_screen(
+                math.ceil((self._height - THUMBS_WRAPPER_VERTICAL_MARGIN) / ITEM_HEIGHT)
+            )
             self._resize_timer = self.root.after(500, self.page_rendering)
 
     def show_image(self, img):
@@ -92,10 +116,13 @@ class GUI:
             self._show_image_window = imgViewer.ShowImage(self.root, img)
 
     def __show_thumbnails(self):
+        items_per_page = items_calculator.items_per_page()
         for i in range(min(len(self._items_list)-self._page*items_per_page, items_per_page)):
             self._items_list[self._page*items_per_page+i].show_thumbnail()
 
     def page_rendering(self):
+        items_per_page = items_calculator.items_per_page()
+        items_per_table_row = items_calculator.items_per_row()
         self.thumbs_wrapper.to_start()
         for widget in self.thumbs_wrapper.interior.winfo_children():
             widget.destroy()
@@ -150,7 +177,7 @@ class GUI:
         self.page_rendering()
 
     def _page_count(self):
-        self._page_count_label['text'] = str(ceil((len(self._items_list)) / items_per_page))
+        self._page_count_label['text'] = str(ceil((len(self._items_list)) / items_calculator.items_per_page()))
 
     def browse_all_files(self):
         pattern = tkinter.simpledialog.askstring("search pattern", "file match pattern:")
@@ -173,7 +200,7 @@ class GUI:
         self.page_rendering()
 
     def next(self):
-        if (self._page+1)*items_per_page < len(self._items_list):
+        if (self._page+1) * items_calculator.items_per_page() < len(self._items_list):
             self._page += 1
             self.page_rendering()
 
@@ -195,7 +222,7 @@ class GUI:
         return self._image_list
 
     def open_page_by_id(self, image_id):
-        self._page = (image_id + self._dir_count) // items_per_page
+        self._page = (image_id + self._dir_count) // items_calculator.items_per_page()
         self.page_rendering()
 
     def __items_list_pop_file(self, image_id):
