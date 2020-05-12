@@ -103,10 +103,13 @@ class GUI:
                 width=self._width - THUMBS_WRAPPER_HORIZONTAL_MARGIN,
                 height=self._height - THUMBS_WRAPPER_VERTICAL_MARGIN
             )
+            min_item = self._page * items_calculator.items_per_page()
             items_calculator.items_per_row((self._width - THUMBS_GRID_PADDING) // THUMBNAIL_WIDTH)
             items_calculator.rows_per_screen(
                 ceil((self._height - THUMBS_WRAPPER_VERTICAL_MARGIN) / ITEM_HEIGHT)
             )
+            self._page = min_item // items_calculator.items_per_page()
+            self._page_count()
             self._resize_timer = self.root.after(500, self.page_rendering)
 
     def show_image(self, img):
@@ -237,8 +240,10 @@ class GUI:
         self.__items_list_pop_file(image_id)
         self._image_list[image_id].unlink()
         self._image_list.pop(image_id)
+        self._page_count()
 
     def move_file(self, image_id, path):
         self.__items_list_pop_file(image_id)
         self._image_list[image_id].rename(path)
         self._image_list.pop(image_id)
+        self._page_count()
