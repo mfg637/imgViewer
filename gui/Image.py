@@ -40,6 +40,7 @@ class Image(somefile.SomeFile):
         self.file_popup_menu.add_command(label="hide menu")
         self.file_popup_menu.add_command(label="Delete file", command=self.__remove_file)
         self.file_popup_menu.add_command(label="Move/Rename file", command=self.__move_file)
+        self.file_popup_menu.add_command(label="Set as cover image", command=self.__set_cover)
 
     def __remove_file(self):
         answer = tkinter.messagebox.askokcancel(
@@ -80,3 +81,6 @@ class Image(somefile.SomeFile):
         self._thumbnail = ImageTk.PhotoImage(img)
         self._icon['image'] = self._thumbnail
         img.close()
+
+    def __set_cover(self):
+        cache.manager.load_folder_thumbnail(os.path.dirname(self._abs_path), cover_image=self._path)
