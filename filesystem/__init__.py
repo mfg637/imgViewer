@@ -24,12 +24,16 @@ def get_image_files(directory_path):
     return path_objects
 
 
-def browse_current_folder():
+def browse_folder(folder):
     path_dir_objects = []
     path_file_objects = []
-    for entry in Path('.').iterdir():
+    for entry in Path(folder).iterdir():
         if entry.is_file() and entry.suffix.lower() in image_file_extensions:
             path_file_objects.append(entry)
         elif entry.is_dir() and entry.name[0] != '.':
             path_dir_objects.append(entry)
     return (path_dir_objects, path_file_objects)
+
+
+def browse_current_folder():
+    return browse_folder('.')
