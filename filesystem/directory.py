@@ -7,6 +7,8 @@ from PIL import ImageTk
 import os
 import sys
 from pathlib import Path
+
+from .filesystem import browse_folder
 from gui import somefile
 import abc
 import cache
@@ -67,9 +69,12 @@ class Directory(AbstractDirectory):
         self.directory = directory
         self._custom_icon = None
         self._image = folder_icon
-        self.file_popup_menu = tkinter.Menu(self._parent.root, tearoff=0)
-        self.file_popup_menu.add_command(label="hide menu")
-        self.file_popup_menu.add_command(label="Change color", command=self.__change_color)
+        self.dir_popup_menu = tkinter.Menu(self._parent.root, tearoff=0)
+        self.dir_popup_menu.add_command(label="hide menu")
+        self.dir_popup_menu.add_command(label="Change color", command=self.__change_color)
+        items = browse_folder(directory)
+        if len(items[0])==0 and len(items[1])==0:
+            self.dir_popup_menu.add_command(label="Delete", command=self.__delete)
 
     def show_thumbnail(self):
         self.load_icon()
@@ -97,13 +102,24 @@ class Directory(AbstractDirectory):
         self._parent.open_dir(str(self.directory))
 
     def show_popup_menu(self, event):
-        self.file_popup_menu.post(event.x_root, event.y_root)
+        self.dir_popup_menu.post(event.x_root, event.y_root)
 
     def __change_color(self):
         hex_color = tkinter.simpledialog.askstring("New color", "hex color:")
         if hex_color is None:
             return
         self.load_icon(color=hex_color)
+
+    def __delete(self):
+        answer = tkinter.messagebox.askokcancel(
+            "Directory deleting",
+            "Are you sure what you want delete this folder \"{}\"".format(str(self.directory))
+        )
+        if answer:
+            for f in self.directory.iterdir():
+                f.unlink()
+            self.directory.rmdir()
+            self._parent.open_dir('.')
 
 
 class ParentDirectory(AbstractDirectory):
@@ -122,5 +138,6 @@ class ParentDirectory(AbstractDirectory):
 
     def open_dir(self, event=None):
         self._parent.open_dir("..")
+
 
 
