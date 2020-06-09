@@ -7,7 +7,7 @@ import PIL.Image
 from PIL import ImageTk
 import threading
 import decoders
-import sys
+import config
 import os
 
 width = 1280
@@ -39,7 +39,7 @@ def init():
     global trash_btn_default
     global trash_btn_active
     img = PIL.Image.open(os.path.join(
-        os.path.dirname(sys.argv[0]),
+        config.app_location,
         "images",
         "arrow.png"
     ))
@@ -47,7 +47,7 @@ def init():
     left_arrow_img = ImageTk.PhotoImage(img.transpose(PIL.Image.FLIP_LEFT_RIGHT))
     img.close()
     img = PIL.Image.open(os.path.join(
-        os.path.dirname(sys.argv[0]),
+        config.app_location,
         "images",
         "arrow_active.png"
     ))
@@ -55,35 +55,35 @@ def init():
     left_arrow_active_img = ImageTk.PhotoImage(img.transpose(PIL.Image.FLIP_LEFT_RIGHT))
     img.close()
     img = PIL.Image.open(os.path.join(
-        os.path.dirname(sys.argv[0]),
+        config.app_location,
         "images",
         "close_btn_default.png"
     ))
     close_btn_default = ImageTk.PhotoImage(img)
     img.close()
     img = PIL.Image.open(os.path.join(
-        os.path.dirname(sys.argv[0]),
+        config.app_location,
         "images",
         "close_btn_active.png"
     ))
     close_btn_active = ImageTk.PhotoImage(img)
     img.close()
     img = PIL.Image.open(os.path.join(
-        os.path.dirname(sys.argv[0]),
+        config.app_location,
         "images",
         "trash_btn_default.png"
     ))
     trash_btn_default = ImageTk.PhotoImage(img)
     img.close()
     img = PIL.Image.open(os.path.join(
-        os.path.dirname(sys.argv[0]),
+        config.app_location,
         "images",
         "trash_btn_active.png"
     ))
     trash_btn_active = ImageTk.PhotoImage(img)
     img.close()
     img = PIL.Image.open(os.path.join(
-        os.path.dirname(sys.argv[0]),
+        config.app_location,
         "images",
         "Spinner-1s-200px.webp"
     ))

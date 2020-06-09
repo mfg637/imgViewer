@@ -6,7 +6,7 @@ import PIL.ImageChops
 import gui.Image
 import io
 from images import folder_icon_painter
-import sys
+import config
 import os
 import json
 from pathlib import Path
@@ -85,7 +85,7 @@ class ThumbnailsCacheManager:
             if self._dir_cache[abs_path]['thumbnail'] is None:
                 if self._dir_cache[abs_path]['color'] is not None and self._dir_cache[abs_path]['cover'] is None:
                     svg_file = folder_icon_painter.paint_icon(
-                        os.path.join(os.path.dirname(sys.argv[0]), "images/folder icon.svg"),
+                        os.path.join(config.app_location, "images/folder icon.svg"),
                         self._dir_cache[abs_path]['color']
                     )
                     self._dir_cache[abs_path]['thumbnail'] = cairosvg.svg2png(bytestring=svg_file)
@@ -96,12 +96,12 @@ class ThumbnailsCacheManager:
                     img = None
                     if self._dir_cache[abs_path]['color'] is not None:
                         svg_file = folder_icon_painter.paint_icon(
-                            os.path.join(os.path.dirname(sys.argv[0]), "images/folder icon blank.svg"),
+                            os.path.join(config.app_location, "images/folder icon blank.svg"),
                             self._dir_cache[abs_path]['color']
                         )
                         img = PIL.Image.open(io.BytesIO(cairosvg.svg2png(bytestring=svg_file)))
                     if img is None:
-                        img = PIL.Image.open(os.path.join(os.path.dirname(sys.argv[0]), "images/folder icon blank.png"))
+                        img = PIL.Image.open(os.path.join(config.app_location, "images/folder icon blank.png"))
                     cover_thumb = decoders.open_image(
                         Path(abs_path).joinpath(self._dir_cache[abs_path]['cover']),
                         (174, 108)

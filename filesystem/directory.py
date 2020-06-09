@@ -5,7 +5,7 @@ import tkinter
 import PIL.Image
 from PIL import ImageTk
 import os
-import sys
+import config
 from pathlib import Path
 
 from .filesystem import browse_folder
@@ -23,17 +23,17 @@ def init():
     global up_directory_icon
     global select_all_icon
     folder_icon = ImageTk.PhotoImage(PIL.Image.open(os.path.join(
-        os.path.dirname(sys.argv[0]),
+        config.app_location,
         "images",
         "folder_icon.png"
      )))
     up_directory_icon = ImageTk.PhotoImage(PIL.Image.open(os.path.join(
-        os.path.dirname(sys.argv[0]),
+        config.app_location,
         "images",
         "up_directory_icon.png"
      )))
     select_all_icon = ImageTk.PhotoImage(PIL.Image.open(os.path.join(
-        os.path.dirname(sys.argv[0]),
+        config.app_location,
         "images",
         "select_all_icon.png"
     )))

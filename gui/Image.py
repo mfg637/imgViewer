@@ -5,7 +5,7 @@ import tkinter
 import PIL.Image
 from PIL import ImageTk
 import os
-import sys
+import config
 from pathlib import Path
 from gui import somefile
 import decoders
@@ -20,7 +20,7 @@ thumbnail_size = (192, 144)
 def init():
     global img_icon
     img_icon = ImageTk.PhotoImage(PIL.Image.open(os.path.join(
-        os.path.dirname(sys.argv[0]),
+        config.app_location,
         "images",
         "img_icon.png"
     )))
