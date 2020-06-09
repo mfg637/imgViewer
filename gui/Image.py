@@ -12,6 +12,8 @@ import decoders
 import tkinter.messagebox
 import tkinter.filedialog
 import cache
+from . import move_file_dialog
+
 img_icon = None
 
 thumbnail_size = (192, 144)
@@ -39,8 +41,9 @@ class Image(somefile.SomeFile):
         self.file_popup_menu = tkinter.Menu(self._parent.root, tearoff=0)
         self.file_popup_menu.add_command(label="hide menu")
         self.file_popup_menu.add_command(label="Delete file", command=self.__remove_file)
-        self.file_popup_menu.add_command(label="Move/Rename file", command=self.__move_file)
+        self.file_popup_menu.add_command(label="Move/Rename file", command=self.__move_file_dialogue)
         self.file_popup_menu.add_command(label="Set as cover image", command=self.__set_cover)
+        self._parent_root = None
 
     def __remove_file(self):
         answer = tkinter.messagebox.askokcancel(
@@ -51,17 +54,15 @@ class Image(somefile.SomeFile):
             self._parent.remove_file(self.id)
             self._parent.page_rendering()
 
-    def __move_file(self):
-        filepath = tkinter.filedialog.asksaveasfilename(
-            initialdir=self._path.parent.resolve(),
-            initialfile=self._path.stem
-        )
-        if len(filepath)>0:
-            self._parent.move_file(self.id, filepath+self._path.suffix)
-            self._parent.page_rendering()
+    def __move_file_dialogue(self):
+        dialog = move_file_dialog.MoveFileDialog(self.__move_file_callback, self._parent_root, self._abs_path)
 
+    def __move_file_callback(self, filepath):
+        self._parent.move_file(self.id, str(filepath))
+        self._parent.page_rendering()
 
     def create_widget(self, root, *pargs, **kwargs):
+        self._parent_root = root
         self._create_widget(
             root,
             img_icon=img_icon,
