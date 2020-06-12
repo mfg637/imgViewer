@@ -72,9 +72,12 @@ class Directory(AbstractDirectory):
         self.dir_popup_menu = tkinter.Menu(self._parent.root, tearoff=0)
         self.dir_popup_menu.add_command(label="hide menu")
         self.dir_popup_menu.add_command(label="Change color", command=self.__change_color)
-        items = browse_folder(directory)
-        if len(items[0])==0 and len(items[1])==0:
-            self.dir_popup_menu.add_command(label="Delete", command=self.__delete)
+        try:
+            items = browse_folder(directory)
+            if len(items[0])==0 and len(items[1])==0:
+                self.dir_popup_menu.add_command(label="Delete", command=self.__delete)
+        except PermissionError:
+            pass
 
     def show_thumbnail(self):
         self.load_icon()
