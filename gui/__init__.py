@@ -80,6 +80,8 @@ class GUI:
         self._page_count_label.pack(side="left")
         self.goto_btn = tkinter.ttk.Button(bottom_panel, text="go to", command=self.__goto)
         self.goto_btn.pack(side="left")
+        self.mkdir_btn = tkinter.ttk.Button(bottom_panel, text="New directory", command=self.mkdir)
+        self.mkdir_btn.pack(side="left")
         self.prev_btn = tkinter.ttk.Button(bottom_panel, text="prev", command=self.prev)
         self.prev_btn.pack(side="left")
         self.next_btn = tkinter.ttk.Button(bottom_panel, text="next", command=self.next)
@@ -178,6 +180,15 @@ class GUI:
             i += 1
         self._page_count()
         self.page_rendering()
+
+    def mkdir(self):
+        dirname = tkinter.simpledialog.askstring("New directory", "Directory name")
+        if dirname is not None and len(dirname)>0:
+            if os.path.exists(dirname):
+                print("Directory or file exists")
+            else:
+                os.mkdir(dirname, 0o700)
+        self.open_dir('.')
 
     def _page_count(self):
         self._page_count_label['text'] = str(ceil((len(self._items_list)) / items_calculator.items_per_page()))
