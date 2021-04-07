@@ -8,7 +8,7 @@ import os
 import config
 from pathlib import Path
 from gui import somefile
-import decoders
+import pyimglib_decoders
 import tkinter.messagebox
 import tkinter.filedialog
 import cache

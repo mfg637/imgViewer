@@ -1,6 +1,6 @@
 import cairosvg
 
-import decoders
+import pyimglib_decoders
 import PIL.Image
 import PIL.ImageChops
 import gui.Image
@@ -23,7 +23,7 @@ class ThumbnailsCacheManager:
             img = PIL.Image.open(buffer)
             return img
         else:
-            source_img = decoders.open_image(str(abs_path), gui.Image.thumbnail_size)
+            source_img = pyimglib_decoders.open_image(str(abs_path), gui.Image.thumbnail_size)
             img = source_img.convert(mode="RGBA")
             source_img.close()
             img.thumbnail(gui.Image.thumbnail_size, PIL.Image.LANCZOS)
@@ -102,7 +102,7 @@ class ThumbnailsCacheManager:
                         img = PIL.Image.open(io.BytesIO(cairosvg.svg2png(bytestring=svg_file)))
                     if img is None:
                         img = PIL.Image.open(os.path.join(config.app_location, "images/folder icon blank.png"))
-                    cover_thumb = decoders.open_image(
+                    cover_thumb = pyimglib_decoders.open_image(
                         Path(abs_path).joinpath(self._dir_cache[abs_path]['cover']),
                         (174, 108)
                     )

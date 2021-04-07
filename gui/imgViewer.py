@@ -6,7 +6,7 @@ import tkinter
 import PIL.Image
 from PIL import ImageTk
 import threading
-import decoders
+import pyimglib_decoders
 import config
 import os
 
@@ -279,7 +279,7 @@ class ShowImage:
         if self._animation_tick is not None:
             self._root.after_cancel(self._animation_tick)
         if img is None:
-            self._img = decoders.open_image(
+            self._img = pyimglib_decoders.open_image(
                 str(self.image_list[self._id]),
                 (width, height)
             )
@@ -309,7 +309,7 @@ class ShowImage:
         self._canvas.bind("<Button-1>", self.on_click)
         if self._img.format == 'WEBP' and self._img.is_animated:
             self._frames_duration = \
-                decoders.webp.get_frames_duration(str(self.image_list[self._id]))
+                pyimglib_decoders.webp.get_frames_duration(str(self.image_list[self._id]))
         if 'loop' in self._img.info and self._img.info['loop'] != 1:
             if isinstance(self._img.info['duration'], (list, tuple)):
                 self._animation_tick = self._root.after(
