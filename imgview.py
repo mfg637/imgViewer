@@ -8,6 +8,8 @@ import os
 
 from multiprocessing import cpu_count
 pyimglib_decoders.avif.workers_count = cpu_count()
+pyimglib_decoders.YUV4MPEG2.limited_range_correction = \
+    pyimglib_decoders.YUV4MPEG2.LIMITED_RANGE_CORRENTION_MODES.NONE
 
 gui_instance = gui.GUI()
 if len(sys.argv) > 1 and os.path.isfile(sys.argv[1]):
