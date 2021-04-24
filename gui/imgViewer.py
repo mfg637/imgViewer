@@ -182,6 +182,7 @@ class ShowImage:
         self._image = None
         self._canvas_img = None
         self._frames = []
+        self._frames_duration = []
         self._current_frame = 0
         self._buttons = [
             ButtonImage(
@@ -262,6 +263,8 @@ class ShowImage:
         if self._parent is not None and self._id is not None:
             self._parent.open_page_by_id(self._id)
         self._img.close()
+        self._frames = []
+        self._frames_duration = []
         self._root.destroy()
 
     def resize(self, event):
@@ -285,12 +288,22 @@ class ShowImage:
             )
         else:
             self._img = img
-        if 'duration_of_video' in self._img.info and self._img.info['duration_of_video'] >30:
-            subprocess.Popen(['mpv', self._img.filename])
+        if isinstance(self._img, pyimglib_decoders.frames_stream.FramesStream) and\
+                self._img.get_duration() is not None and self._img.get_duration() > 30:
+            self._read_done = True
             self.on_closing()
+            try:
+                os.startfile(self._img.filename)
+            except AttributeError:
+                subprocess.Popen(["xdg-open", self._img.filename],)
+            return None
         self._frames = []
         self._frames_duration = []
-        scaled_img = self._img.convert(mode='RGBA')
+        scaled_img = None
+        if isinstance(self._img, pyimglib_decoders.frames_stream.FramesStream):
+            scaled_img = self._img.next_frame().convert(mode='RGBA')
+        else:
+            scaled_img = self._img.convert(mode='RGBA')
         scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
         self._root.geometry("{}x{}".format(width, height))
         self._image = ImageTk.PhotoImage(scaled_img)
@@ -310,7 +323,7 @@ class ShowImage:
         if self._img.format == 'WEBP' and self._img.is_animated:
             self._frames_duration = \
                 pyimglib_decoders.webp.get_frames_duration(str(self.image_list[self._id]))
-        if 'loop' in self._img.info and self._img.info['loop'] != 1:
+        if isinstance(self._img, PIL.Image.Image) and 'loop' in self._img.info and self._img.info['loop'] != 1:
             if isinstance(self._img.info['duration'], (list, tuple)):
                 self._animation_tick = self._root.after(
                     self._img.info['duration'][self._img.tell()],
@@ -327,7 +340,15 @@ class ShowImage:
                     self.__frame_update
                 )
         else:
-            self._read_done = True
+            if isinstance(self._img, pyimglib_decoders.frames_stream.FramesStream) and self._img.is_animated and \
+                    not self._read_done:
+                self._animation_tick = self._root.after(
+                    self._img.get_frame_time_ms(),
+                    self.__frame_update
+                )
+            else:
+                self._read_done = True
+                self._img.close()
 
     def __prev(self, event=None):
         if self._id > 0:
@@ -384,23 +405,42 @@ class ShowImage:
     def __frame_update(self):
         if self._read_done:
             self._image = self._frames[self._current_frame]
-            self._current_frame +=1
+            self._current_frame += 1
             if self._current_frame >= len(self._frames):
                 self._current_frame = 0
         else:
-            try:
-                self._img.seek(self._img.tell() + 1)
-            except EOFError:
-                self._img.seek(0)
-                self._read_done = True
-                self._current_frame = 0
-            scaled_img = self._img.convert(mode='RGBA')
-            scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
-            self._image = ImageTk.PhotoImage(scaled_img)
-            if self._img.tell() >= len(self._frames):
-                self._frames.append(self._image)
-            self._img_width = scaled_img.width
-            self._img_height = scaled_img.height
+            if isinstance(self._img, PIL.Image.Image):
+                try:
+                    self._img.seek(self._img.tell() + 1)
+                except EOFError:
+                    self._img.seek(0)
+                    self._read_done = True
+                    self._current_frame = 0
+                scaled_img = self._img.convert(mode='RGBA')
+                scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
+                self._image = ImageTk.PhotoImage(scaled_img)
+                if self._img.tell() >= len(self._frames):
+                    self._frames.append(self._image)
+                self._img_width = scaled_img.width
+                self._img_height = scaled_img.height
+            elif isinstance(self._img, pyimglib_decoders.frames_stream.FramesStream):
+                source_img = None
+                try:
+                    source_img = self._img.next_frame()
+                except EOFError:
+                    self._read_done = True
+                    self._current_frame = 0
+                    self._frames_duration = self._img.get_frame_time_ms()
+                    self._img.close()
+                else:
+                    scaled_img = source_img.convert(mode='RGBA')
+                    scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
+                    self._image = ImageTk.PhotoImage(scaled_img)
+                    self._frames.append(self._image)
+                    self._img_width = scaled_img.width
+                    self._img_height = scaled_img.height
+            else:
+                raise TypeError(type(self._img))
         self._canvas.delete(self._canvas_img)
         self._canvas_img = self._canvas.create_image(
             int((width - self._img_width) / 2),
@@ -419,9 +459,20 @@ class ShowImage:
                     67,
                     self.__frame_update
                 )
+        elif self._read_done and isinstance(self._img, pyimglib_decoders.frames_stream.FramesStream):
+            self._animation_tick = self._root.after(
+                self._frames_duration,
+                self.__frame_update
+            )
         elif self._read_done and isinstance(self._img.info['duration'], (list, tuple)):
             self._animation_tick = self._root.after(
                 self._img.info['duration'][self._current_frame],
+                self.__frame_update
+            )
+        elif not self._read_done and isinstance(self._img, pyimglib_decoders.frames_stream.FramesStream):
+            self._animation_tick = self._root.after(
+                #self._img.get_frame_time_ms(),
+                17,
                 self.__frame_update
             )
         else:
@@ -479,6 +530,6 @@ class ShowImage:
     def delete(self):
         if self.image_list is not None:
             self._parent.remove_file(self._id)
-            if self._id==len(self.image_list):
+            if self._id == len(self.image_list):
                 self._id -= 1
             self.__show()

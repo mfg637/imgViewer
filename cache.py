@@ -24,6 +24,10 @@ class ThumbnailsCacheManager:
             return img
         else:
             source_img = pyimglib_decoders.open_image(str(abs_path), gui.Image.thumbnail_size)
+            if isinstance(source_img, pyimglib_decoders.frames_stream.FramesStream):
+                img = source_img.next_frame()
+                source_img.close()
+                source_img = img
             img = source_img.convert(mode="RGBA")
             source_img.close()
             img.thumbnail(gui.Image.thumbnail_size, PIL.Image.LANCZOS)
