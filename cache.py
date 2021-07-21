@@ -37,7 +37,7 @@ class ThumbnailsCacheManager:
             buffer.close()
             return img
 
-    def load_folder_thumbnail(self, abs_path, color=None, cover_image=None):
+    def load_folder_thumbnail(self, abs_path:Path, color=None, cover_image=None):
         config_file = os.path.join(abs_path, ".imgview-dir-config.json")
         if abs_path not in self._dir_cache and os.path.exists(config_file):
             with open(config_file, 'r') as f:
@@ -129,6 +129,15 @@ class ThumbnailsCacheManager:
         else:
             return None
 
+    def rename_dir(self, old_name:Path, new_name:str):
+        if old_name in self._dir_cache and os.path.exists(old_name):
+            new_dir = old_name.replace(new_name)
+            self._dir_cache[new_dir] = self._dir_cache.pop(old_name)
+            return new_dir
+        elif os.path.exists(old_name):
+            return old_name.replace(new_name)
+        else:
+            raise FileExistsError(old_name)
 
 
 manager = ThumbnailsCacheManager()
