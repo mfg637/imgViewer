@@ -22,7 +22,7 @@ class MoveFileDialog:
                     node_id = _id
                     break
             self._tree.item(node_id, open=True)
-            for file in node.iterdir():
+            for file in sorted(node.iterdir()):
                 if file.is_dir() and file.name[0] != '.':
                     ids.append(self._tree.insert(node_id, "end", text=str(file.name), values=(file,)))
         file_elem = None
@@ -63,7 +63,7 @@ class MoveFileDialog:
         if len(childs_list)==1 and self._tree.item(childs_list[0], option="values")[0] == "None":
             self._tree.delete(childs_list)
             elem = pathlib.Path(self._tree.item(elem_id, option="values")[0])
-            for file in elem.iterdir():
+            for file in sorted(elem.iterdir()):
                 if file.is_dir() and file.name[0] != '.':
                     file_id = self._tree.insert(elem_id, "end", text=str(file.name), values=(file,))
                     self._tree.insert(file_id, "end", text="Placeholder", values=("None",))
