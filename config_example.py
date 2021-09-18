@@ -8,3 +8,5 @@ pyimglib_decoders.YUV4MPEG2.limited_range_correction = \
 
 # needs to decode JPEG XL images
 pyimglib_decoders.jpeg_xl.PATH_TO_REFERENCE_DECODER = None
+
+ACLMMP_COMPATIBILITY_LEVEL = 3

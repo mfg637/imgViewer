@@ -292,11 +292,15 @@ class ShowImage:
                 self._img.get_duration() is not None and self._img.get_duration() > 30:
             self._read_done = True
             self.on_closing()
-            try:
-                os.startfile(self._img.filename)
-            except AttributeError:
-                subprocess.Popen(["xdg-open", self._img.filename],)
-            return None
+            if pyimglib_decoders.srs.is_ACLMMP_SRS(self._img.filename):
+                srs_file = open(self._img.filename, 'r')
+                pyimglib_decoders.ACLMMP.mpv_launcher.launch_mpv(srs_file, config.ACLMMP_COMPATIBILITY_LEVEL)
+            else:
+                try:
+                    os.startfile(self._img.filename)
+                except AttributeError:
+                    subprocess.Popen(["xdg-open", self._img.filename],)
+                return None
         self._frames = []
         self._frames_duration = []
         scaled_img = None
