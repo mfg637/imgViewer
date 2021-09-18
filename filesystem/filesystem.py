@@ -1,7 +1,7 @@
 from pathlib import Path
 
 image_file_extensions = {
-    '.jpg', '.jpeg', '.png', '.webp', '.gif', '.webm', '.svg', '.mkv', '.mp4', '.avif', '.y4m', '.jxl'
+    '.jpg', '.jpeg', '.png', '.webp', '.gif', '.webm', '.svg', '.mkv', '.mp4', '.avif', '.y4m', '.jxl', '.srs'
 }
 
 
