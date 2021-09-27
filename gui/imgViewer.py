@@ -6,7 +6,7 @@ import tkinter
 import PIL.Image
 from PIL import ImageTk
 import threading
-import pyimglib_decoders
+import pyimglib
 import config
 import os
 
@@ -282,19 +282,19 @@ class ShowImage:
         if self._animation_tick is not None:
             self._root.after_cancel(self._animation_tick)
         if img is None:
-            self._img = pyimglib_decoders.open_image(
+            self._img = pyimglib.decoders.open_image(
                 str(self.image_list[self._id]),
                 (width, height)
             )
         else:
             self._img = img
-        if isinstance(self._img, pyimglib_decoders.frames_stream.FramesStream) and\
+        if isinstance(self._img, pyimglib.decoders.frames_stream.FramesStream) and\
                 self._img.get_duration() is not None and self._img.get_duration() > 30:
             self._read_done = True
             self.on_closing()
-            if pyimglib_decoders.srs.is_ACLMMP_SRS(self._img.filename):
+            if pyimglib.decoders.srs.is_ACLMMP_SRS(self._img.filename):
                 srs_file = open(self._img.filename, 'r')
-                pyimglib_decoders.ACLMMP.mpv_launcher.launch_mpv(srs_file, config.ACLMMP_COMPATIBILITY_LEVEL)
+                pyimglib.ACLMMP.mpv_launcher.launch_mpv(srs_file, config.ACLMMP_COMPATIBILITY_LEVEL)
             else:
                 try:
                     os.startfile(self._img.filename)
@@ -304,7 +304,7 @@ class ShowImage:
         self._frames = []
         self._frames_duration = []
         scaled_img = None
-        if isinstance(self._img, pyimglib_decoders.frames_stream.FramesStream):
+        if isinstance(self._img, pyimglib.decoders.frames_stream.FramesStream):
             scaled_img = self._img.next_frame().convert(mode='RGBA')
         else:
             scaled_img = self._img.convert(mode='RGBA')
@@ -326,7 +326,7 @@ class ShowImage:
         self._canvas.bind("<Button-1>", self.on_click)
         if self._img.format == 'WEBP' and self._img.is_animated:
             self._frames_duration = \
-                pyimglib_decoders.webp.get_frames_duration(str(self.image_list[self._id]))
+                pyimglib.decoders.webp.get_frames_duration(str(self.image_list[self._id]))
         if isinstance(self._img, PIL.Image.Image) and 'loop' in self._img.info and self._img.info['loop'] != 1:
             if isinstance(self._img.info['duration'], (list, tuple)):
                 self._animation_tick = self._root.after(
@@ -344,7 +344,7 @@ class ShowImage:
                     self.__frame_update
                 )
         else:
-            if isinstance(self._img, pyimglib_decoders.frames_stream.FramesStream) and self._img.is_animated and \
+            if isinstance(self._img, pyimglib.decoders.frames_stream.FramesStream) and self._img.is_animated and \
                     not self._read_done:
                 self._animation_tick = self._root.after(
                     self._img.get_frame_time_ms(),
@@ -427,7 +427,7 @@ class ShowImage:
                     self._frames.append(self._image)
                 self._img_width = scaled_img.width
                 self._img_height = scaled_img.height
-            elif isinstance(self._img, pyimglib_decoders.frames_stream.FramesStream):
+            elif isinstance(self._img, pyimglib.decoders.frames_stream.FramesStream):
                 source_img = None
                 try:
                     source_img = self._img.next_frame()
@@ -463,7 +463,7 @@ class ShowImage:
                     67,
                     self.__frame_update
                 )
-        elif self._read_done and isinstance(self._img, pyimglib_decoders.frames_stream.FramesStream):
+        elif self._read_done and isinstance(self._img, pyimglib.decoders.frames_stream.FramesStream):
             self._animation_tick = self._root.after(
                 self._frames_duration,
                 self.__frame_update
@@ -473,7 +473,7 @@ class ShowImage:
                 self._img.info['duration'][self._current_frame],
                 self.__frame_update
             )
-        elif not self._read_done and isinstance(self._img, pyimglib_decoders.frames_stream.FramesStream):
+        elif not self._read_done and isinstance(self._img, pyimglib.decoders.frames_stream.FramesStream):
             self._animation_tick = self._root.after(
                 #self._img.get_frame_time_ms(),
                 17,

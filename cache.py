@@ -1,6 +1,6 @@
 import cairosvg
 
-import pyimglib_decoders
+import pyimglib
 import PIL.Image
 import PIL.ImageChops
 import gui.Image
@@ -23,8 +23,8 @@ class ThumbnailsCacheManager:
             img = PIL.Image.open(buffer)
             return img
         else:
-            source_img = pyimglib_decoders.open_image(str(abs_path), gui.Image.thumbnail_size)
-            if isinstance(source_img, pyimglib_decoders.frames_stream.FramesStream):
+            source_img = pyimglib.decoders.open_image(str(abs_path), gui.Image.thumbnail_size)
+            if isinstance(source_img, pyimglib.decoders.frames_stream.FramesStream):
                 img = source_img.next_frame()
                 source_img.close()
                 source_img = img
@@ -106,7 +106,7 @@ class ThumbnailsCacheManager:
                         img = PIL.Image.open(io.BytesIO(cairosvg.svg2png(bytestring=svg_file)))
                     if img is None:
                         img = PIL.Image.open(os.path.join(config.app_location, "images/folder icon blank.png"))
-                    cover_thumb = pyimglib_decoders.open_image(
+                    cover_thumb = pyimglib.decoders.open_image(
                         Path(abs_path).joinpath(self._dir_cache[abs_path]['cover']),
                         (174, 108)
                     )

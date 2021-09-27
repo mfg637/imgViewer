@@ -6,9 +6,7 @@ import PIL.Image
 from PIL import ImageTk
 import os
 import config
-from pathlib import Path
 from gui import somefile
-import pyimglib_decoders
 import tkinter.messagebox
 import tkinter.filedialog
 import cache
