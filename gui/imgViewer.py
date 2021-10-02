@@ -302,6 +302,11 @@ class ShowImage:
                 except AttributeError:
                     subprocess.Popen(["xdg-open", self._img.filename],)
                 return None
+        elif isinstance(self._img, pyimglib.decoders.srs.ClImage) and 'original_filename' in self._img.content:
+            self._read_done = True
+            self.on_closing()
+            srs_file = open(self._img.content['original_filename'], 'r')
+            pyimglib.ACLMMP.mpv_launcher.launch_mpv(srs_file, config.ACLMMP_COMPATIBILITY_LEVEL)
         self._frames = []
         self._frames_duration = []
         self._lod_queue = None
