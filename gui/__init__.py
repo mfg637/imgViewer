@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import pathlib
 import tkinter
 import tkinter.ttk
 from tkinter import messagebox
 import tkinter.simpledialog
+
+import pyimglib.decoders.srs
 from . import ScrolledFrame
 import os
 import filesystem
@@ -166,7 +168,14 @@ class GUI:
             filesystem.directory.MatchFilesPattern(self)
         ]
         self._page = 0
-        directory_list, file_paths_list = filesystem.browse_current_folder()
+        directory_list, file_paths_list, srs_files = filesystem.browse_current_folder()
+        print("FILE PATH LISt", file_paths_list)
+        for srs_file in srs_files:
+            excluded_files = pyimglib.decoders.srs.get_file_paths(srs_file)
+            for excluded_file in excluded_files:
+                print(excluded_file)
+                file_paths_list.remove(pathlib.Path(excluded_file))
+            file_paths_list.append(srs_file)
         directory_list.sort(key=self._extract_name, reverse=True)
         file_paths_list.sort(key=self._extract_mtime_key, reverse=True)
         self._dir_count = len(directory_list) + 2

@@ -28,6 +28,8 @@ class ThumbnailsCacheManager:
                 img = source_img.next_frame()
                 source_img.close()
                 source_img = img
+            elif isinstance(source_img, pyimglib.decoders.srs.ClImage):
+                source_img = source_img.load_thumbnail(gui.Image.thumbnail_size)
             img = source_img.convert(mode="RGBA")
             source_img.close()
             img.thumbnail(gui.Image.thumbnail_size, PIL.Image.LANCZOS)

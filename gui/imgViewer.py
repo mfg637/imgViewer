@@ -262,7 +262,8 @@ class ShowImage:
     def on_closing(self, event=None):
         if self._parent is not None and self._id is not None:
             self._parent.open_page_by_id(self._id)
-        self._img.close()
+        if not isinstance(self._img, pyimglib.decoders.srs.ClImage):
+            self._img.close()
         self._frames = []
         self._frames_duration = []
         self._root.destroy()
@@ -303,9 +304,15 @@ class ShowImage:
                 return None
         self._frames = []
         self._frames_duration = []
+        self._lod_queue = None
         scaled_img = None
         if isinstance(self._img, pyimglib.decoders.frames_stream.FramesStream):
             scaled_img = self._img.next_frame().convert(mode='RGBA')
+        elif isinstance(self._img, pyimglib.decoders.srs.ClImage):
+            if self._lod_queue is None:
+                self._lod_queue = self._img.progressive_lods()
+                scaled_img = pyimglib.decoders.srs.open_image(self._lod_queue.pop(0))
+                scaled_img = scaled_img.convert(mode="RGBA")
         else:
             scaled_img = self._img.convert(mode='RGBA')
         scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
@@ -324,7 +331,8 @@ class ShowImage:
                 button.redraw()
         self._canvas.bind("<Motion>", self.mouse_move)
         self._canvas.bind("<Button-1>", self.on_click)
-        if self._img.format == 'WEBP' and self._img.is_animated:
+        if not isinstance(self._img, pyimglib.decoders.srs.ClImage) and \
+                self._img.format == 'WEBP' and self._img.is_animated:
             self._frames_duration = \
                 pyimglib.decoders.webp.get_frames_duration(str(self.image_list[self._id]))
         if isinstance(self._img, PIL.Image.Image) and 'loop' in self._img.info and self._img.info['loop'] != 1:
@@ -350,9 +358,41 @@ class ShowImage:
                     self._img.get_frame_time_ms(),
                     self.__frame_update
                 )
+            elif isinstance(self._img, pyimglib.decoders.srs.ClImage):
+                self._read_done = True
+                print("LOD queue", self._lod_queue)
+                if len(self._lod_queue):
+                    self.__next_lod()
             else:
                 self._read_done = True
                 self._img.close()
+
+    def __next_lod(self):
+        default_speed = pyimglib.config.avif_decoding_speed
+        pyimglib.config.avif_decoding_speed = pyimglib.config.AVIF_DECODING_SPEEDS.SLOW
+        scaled_img = pyimglib.decoders.srs.open_image(self._lod_queue.pop(0))
+        pyimglib.config.avif_decoding_speed = default_speed
+        if isinstance(scaled_img, pyimglib.decoders.frames_stream.FramesStream):
+            scaled_img = scaled_img.next_frame().convert(mode='RGBA')
+        else:
+            scaled_img = scaled_img.convert(mode="RGBA")
+        scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
+        self._root.geometry("{}x{}".format(width, height))
+        self._image = ImageTk.PhotoImage(scaled_img)
+        self._frames.clear()
+        self._frames.append(self._image)
+        self._canvas.delete(self._canvas_img)
+        self._canvas_img = self._canvas.create_image(
+            int((width - scaled_img.width) / 2),
+            int((height - scaled_img.height) / 2),
+            anchor=tkinter.NW,
+            image=self._image
+        )
+        print("LOD queue", self._lod_queue)
+        if len(self._lod_queue):
+            self.__next_lod()
+        else:
+            self._read_done = True
 
     def __prev(self, event=None):
         if self._id > 0:
