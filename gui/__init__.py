@@ -172,7 +172,7 @@ class GUI:
         for srs_file in srs_files:
             excluded_files = pyimglib.decoders.srs.get_file_paths(srs_file)
             for excluded_file in excluded_files:
-                file_paths_list.remove(pathlib.Path(excluded_file))
+                file_paths_list.remove(excluded_file)
             file_paths_list.append(srs_file)
         directory_list.sort(key=self._extract_name, reverse=True)
         file_paths_list.sort(key=self._extract_mtime_key, reverse=True)
