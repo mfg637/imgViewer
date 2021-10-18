@@ -256,6 +256,10 @@ class GUI:
 
     def remove_file(self, image_id):
         self.__items_list_pop_file(image_id)
+        if pyimglib.decoders.srs.is_ACLMMP_SRS(self._image_list[image_id]):
+            files = pyimglib.decoders.srs.get_file_paths(self._image_list[image_id])
+            for filepath in files:
+                filepath.unlink()
         self._image_list[image_id].unlink()
         self._image_list.pop(image_id)
         self._page_count()
