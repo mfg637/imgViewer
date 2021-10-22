@@ -12,6 +12,17 @@ import json
 from pathlib import Path
 
 
+def _open_image(abs_path, size=gui.Image.thumbnail_size):
+    source_img = pyimglib.decoders.open_image(str(abs_path), size)
+    if isinstance(source_img, pyimglib.decoders.frames_stream.FramesStream):
+        img = source_img.next_frame()
+        source_img.close()
+        source_img = img
+    elif isinstance(source_img, pyimglib.decoders.srs.ClImage):
+        source_img = source_img.load_thumbnail(size)
+    return source_img
+
+
 class ThumbnailsCacheManager:
     def __init__(self):
         self._cache = dict()
@@ -23,13 +34,7 @@ class ThumbnailsCacheManager:
             img = PIL.Image.open(buffer)
             return img
         else:
-            source_img = pyimglib.decoders.open_image(str(abs_path), gui.Image.thumbnail_size)
-            if isinstance(source_img, pyimglib.decoders.frames_stream.FramesStream):
-                img = source_img.next_frame()
-                source_img.close()
-                source_img = img
-            elif isinstance(source_img, pyimglib.decoders.srs.ClImage):
-                source_img = source_img.load_thumbnail(gui.Image.thumbnail_size)
+            source_img = _open_image(abs_path)
             img = source_img.convert(mode="RGBA")
             source_img.close()
             img.thumbnail(gui.Image.thumbnail_size, PIL.Image.LANCZOS)
@@ -108,10 +113,7 @@ class ThumbnailsCacheManager:
                         img = PIL.Image.open(io.BytesIO(cairosvg.svg2png(bytestring=svg_file)))
                     if img is None:
                         img = PIL.Image.open(os.path.join(config.app_location, "images/folder icon blank.png"))
-                    cover_thumb = pyimglib.decoders.open_image(
-                        Path(abs_path).joinpath(self._dir_cache[abs_path]['cover']),
-                        (174, 108)
-                    )
+                    cover_thumb = _open_image(Path(abs_path).joinpath(self._dir_cache[abs_path]['cover']), (174, 108))
                     cover_thumb.thumbnail((174, 108), PIL.Image.LANCZOS)
                     xoffset = (174 - cover_thumb.size[0])//2 + 10
                     yoffset = (108 - cover_thumb.size[1])//2 + 30
