@@ -9,6 +9,7 @@ import threading
 import pyimglib
 import config
 import os
+import asyncio
 
 width = 1280
 height = 720
@@ -244,11 +245,16 @@ class ShowImage:
         self._root.bind("<Escape>", self.on_closing)
         self._root.focus()
         self._hide_cursor_timer = None
+        self._srs_lod_update_process = None
         self._cursor_visible = True
         self._canvas['width'] = width
         self._canvas['height'] = height
         threading.Thread(target=self.draw_spinner).start()
         threading.Thread(target=self.__show, args=(img,)).start()
+
+    def _stop_lod_update(self):
+        if self._srs_lod_update_process is not None:
+            self._srs_lod_update_process.kill()
 
     def mouse_double_click(self):
         has_active_button = False
@@ -260,6 +266,8 @@ class ShowImage:
             self.on_closing()
 
     def on_closing(self, event=None):
+        self._stop_lod_update()
+        self._delete_spinner()
         if self._parent is not None and self._id is not None:
             self._parent.open_page_by_id(self._id)
         if not isinstance(self._img, pyimglib.decoders.srs.ClImage):
@@ -367,20 +375,36 @@ class ShowImage:
                 self._read_done = True
                 print("LOD queue", self._lod_queue)
                 if len(self._lod_queue):
-                    self.__next_lod()
+                    asyncio.run(self.__next_lod())
             else:
                 self._read_done = True
                 self._img.close()
 
-    def __next_lod(self):
+    def _lod_loader_process_callback(self, process):
+        self._srs_lod_update_process = process
+
+    async def __next_lod(self):
         default_speed = pyimglib.config.avif_decoding_speed
         pyimglib.config.avif_decoding_speed = pyimglib.config.AVIF_DECODING_SPEEDS.SLOW
-        scaled_img = pyimglib.decoders.srs.open_image(self._lod_queue.pop(0))
+        lod = self._lod_queue.pop(0)
+        scaled_img = None
+        if pyimglib.decoders.avif.is_avif(lod):
+            try:
+                scaled_img = await pyimglib.decoders.avif.async_decode(lod, self._lod_loader_process_callback)
+            except PIL.UnidentifiedImageError:
+                self._srs_lod_update_process = None
+                return
+            self._srs_lod_update_process = None
+        else:
+            scaled_img = pyimglib.decoders.srs.open_image(lod)
         pyimglib.config.avif_decoding_speed = default_speed
         if isinstance(scaled_img, pyimglib.decoders.frames_stream.FramesStream):
             scaled_img = scaled_img.next_frame().convert(mode='RGBA')
         else:
-            scaled_img = scaled_img.convert(mode="RGBA")
+            try:
+                scaled_img = scaled_img.convert(mode="RGBA")
+            except OSError:
+                return
         scaled_img.thumbnail((width, height), PIL.Image.LANCZOS)
         self._root.geometry("{}x{}".format(width, height))
         self._image = ImageTk.PhotoImage(scaled_img)
@@ -402,11 +426,15 @@ class ShowImage:
     def __prev(self, event=None):
         if self._id > 0:
             self._id -= 1
+            self._delete_spinner()
+            self._stop_lod_update()
             self._show()
 
     def __next(self, event=None):
         if self._id < len(self.image_list) - 1:
             self._id += 1
+            self._delete_spinner()
+            self._stop_lod_update()
             self._show()
 
     def mouse_move(self, event):
@@ -570,6 +598,9 @@ class ShowImage:
         else:
             self._spinner_image = None
             self._spinner_frame = 0
+
+    def _delete_spinner(self):
+        self._root.after_cancel(self.draw_spinner)
 
     def _show(self):
         self._read_done = False
