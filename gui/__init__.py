@@ -209,9 +209,17 @@ class GUI:
         self._page = 0
         self._dir_count = 1
         self._image_list = []
+        srs_list = list()
         for file in Path('.').glob(pattern):
-            if file.is_file() and file.suffix in filesystem.image_file_extensions:
+            if file.is_file() and pyimglib.decoders.srs.is_ACLMMP_SRS(file):
+                srs_list.append(file)
+            elif file.is_file() and file.suffix in filesystem.image_file_extensions:
                 self._image_list.append(file)
+        for srs_file in srs_list:
+            excluded_files = pyimglib.decoders.srs.get_file_paths(srs_file)
+            for excluded_file in excluded_files:
+                self._image_list.remove(excluded_file)
+            self._image_list.append(srs_file)
         self._image_list.sort(key=self._extract_mtime_key, reverse=True)
         i = 0
         for image in self._image_list:
