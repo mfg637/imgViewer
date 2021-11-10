@@ -170,9 +170,13 @@ class GUI:
         self._page = 0
         directory_list, file_paths_list, srs_files = filesystem.browse_current_folder()
         for srs_file in srs_files:
-            excluded_files = pyimglib.decoders.srs.get_file_paths(srs_file)
+            f = srs_file.open('r')
+            content, streams, level = pyimglib.ACLMMP.srs_parser.parseJSON(f)
+            excluded_files = pyimglib.ACLMMP.srs_parser.get_files_list(srs_file, content, streams)
+            f.close()
             for excluded_file in excluded_files:
-                file_paths_list.remove(excluded_file)
+                if excluded_file in file_paths_list:
+                    file_paths_list.remove(excluded_file)
             file_paths_list.append(srs_file)
         directory_list.sort(key=self._extract_name, reverse=True)
         file_paths_list.sort(key=self._extract_mtime_key, reverse=True)
@@ -216,9 +220,13 @@ class GUI:
             elif file.is_file() and file.suffix in filesystem.image_file_extensions:
                 self._image_list.append(file)
         for srs_file in srs_list:
-            excluded_files = pyimglib.decoders.srs.get_file_paths(srs_file)
+            f = srs_file.open('r')
+            content, streams, level = pyimglib.ACLMMP.srs_parser.parseJSON(f)
+            excluded_files = pyimglib.ACLMMP.srs_parser.get_files_list(srs_file, content, streams)
+            f.close()
             for excluded_file in excluded_files:
-                self._image_list.remove(excluded_file)
+                if excluded_file in self._image_list:
+                    self._image_list.remove(excluded_file)
             self._image_list.append(srs_file)
         self._image_list.sort(key=self._extract_mtime_key, reverse=True)
         i = 0
