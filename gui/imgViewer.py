@@ -302,8 +302,9 @@ class ShowImage:
             self._read_done = True
             self.on_closing()
             if pyimglib.decoders.srs.is_ACLMMP_SRS(self._img.filename):
-                srs_file = open(self._img.filename, 'r')
-                pyimglib.ACLMMP.mpv_launcher.launch_mpv(srs_file, config.ACLMMP_COMPATIBILITY_LEVEL)
+                pyimglib.ACLMMP.mpv_launcher.launch_mpv(
+                    self._img.filename, config.ACLMMP_COMPATIBILITY_LEVEL
+                )
             else:
                 try:
                     os.startfile(self._img.filename)
@@ -313,8 +314,9 @@ class ShowImage:
         elif isinstance(self._img, pyimglib.decoders.srs.ClImage) and 'original_filename' in self._img.content:
             self._read_done = True
             self.on_closing()
-            srs_file = open(self._img.content['original_filename'], 'r')
-            pyimglib.ACLMMP.mpv_launcher.launch_mpv(srs_file, config.ACLMMP_COMPATIBILITY_LEVEL)
+            pyimglib.ACLMMP.mpv_launcher.launch_mpv(
+                self._img.content['original_filename'], config.ACLMMP_COMPATIBILITY_LEVEL
+            )
         self._frames = []
         self._frames_duration = []
         self._lod_queue = None
